@@ -1,0 +1,169 @@
+/* ===== 동기화 공통 코드: 서버와 화면이 똑같이 씁니다 ===== */
+const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const isIdArr = (a) => Array.isArray(a) && a.every((x) => isObj(x) && x.id != null);
+const sameJSON = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const clone = (v) => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
+
+const isEmptyVal = (v) => v === undefined || v === null || v === false || v === 0 || v === "" ||
+  Array.isArray(v) && v.every(isEmptyVal) || isObj(v) && Object.keys(v).length === 0;
+// 새로 생긴 값: 빈 그릇과 기본값은 "없을 때만 만들기(ensure)"로 보내서
+// 두 기기가 같은 주(week)를 동시에 처음 만들어도 서로의 입력을 덮어쓰지 않게 한다.
+function emitNew(b, path, out) {
+  if (isObj(b)) {
+    out.push({ op: "ensure", path, value: {} });
+    for (const k of Object.keys(b)) emitNew(b[k], path.concat(k), out);
+    return;
+  }
+  if (Array.isArray(b) && b.length && isIdArr(b)) {
+    out.push({ op: "ensure", path, value: [] });
+    for (const x of b) out.push({ op: "aput", path, id: String(x.id), value: clone(x) });
+    return;
+  }
+  if (Array.isArray(b) && b.length && b.length <= 31 && b.every((x) => x === null || typeof x !== "object")) {
+    // 요일 칸 같은 짧은 배열은 빈 틀을 "없을 때만" 만들고, 값이 있는 칸만 따로 보낸다
+    out.push({ op: "ensure", path, value: b.map((x) => typeof x === "number" ? 0 : typeof x === "string" ? "" : typeof x === "boolean" ? false : null) });
+    b.forEach((x, i) => { if (!isEmptyVal(x)) out.push({ op: "set", path: path.concat(i), value: x }); });
+    return;
+  }
+  if (isEmptyVal(b)) out.push({ op: "ensure", path, value: clone(b) });
+  else out.push({ op: "set", path, value: clone(b) });
+}
+// 바뀐 부분만 골라 낸다. 배열 안의 {id} 항목은 id로 비교해서, 두 기기가 동시에 추가해도 겹치지 않는다.
+function diffState(a, b, path = [], out = []) {
+  if (a === b) return out;
+  if (a === undefined) {
+    emitNew(b, path, out);
+    return out;
+  }
+  if (isObj(a) && isObj(b)) {
+    for (const k of Object.keys(a)) if (!(k in b)) out.push({ op: "del", path: path.concat(k) });
+    for (const k of Object.keys(b)) {
+      if (!(k in a)) emitNew(b[k], path.concat(k), out);
+      else diffState(a[k], b[k], path.concat(k), out);
+    }
+    return out;
+  }
+  if (Array.isArray(a) && Array.isArray(b) && isIdArr(a) && isIdArr(b) && (a.length || b.length)) {
+    const am = new Map(a.map((x) => [String(x.id), x]));
+    const bm = new Map(b.map((x) => [String(x.id), x]));
+    for (const id of am.keys()) if (!bm.has(id)) out.push({ op: "adel", path, id });
+    for (const x of b) {
+      const id = String(x.id);
+      if (!am.has(id)) out.push({ op: "aput", path, id, value: clone(x) });
+      else if (!sameJSON(am.get(id), x)) diffState(am.get(id), x, path.concat({ i: id }), out);
+    }
+    return out;
+  }
+  if (Array.isArray(a) && Array.isArray(b) && a.length === b.length && !isIdArr(a) && !isIdArr(b)) {
+    // 요일 칸처럼 자리가 정해진 배열은 칸마다 따로 보낸다 (월요일·화요일을 다른 기기에서 동시에 고쳐도 둘 다 남음)
+    for (let i = 0; i < b.length; i++) diffState(a[i], b[i], path.concat(i), out);
+    return out;
+  }
+  if (!sameJSON(a, b)) out.push({ op: "set", path, value: clone(b) });
+  return out;
+}
+
+const stepGet = (cur, st) => {
+  if (cur == null) return undefined;
+  if (isObj(st)) return Array.isArray(cur) ? cur.find((x) => isObj(x) && String(x.id) === String(st.i)) : undefined;
+  return cur[st];
+};
+function getAt(root, path) {
+  let cur = root;
+  for (const st of path) {
+    cur = stepGet(cur, st);
+    if (cur === undefined) return undefined;
+  }
+  return cur;
+}
+// 경로의 부모까지 내려가며 없으면 만든다. 배열 id 항목이 없으면 null.
+function parentOf(root, path) {
+  let cur = root;
+  for (let i = 0; i < path.length - 1; i++) {
+    const st = path[i];
+    let nx = stepGet(cur, st);
+    if (nx === undefined || nx === null || typeof nx !== "object") {
+      if (isObj(st)) return null;
+      nx = isObj(path[i + 1]) ? [] : {};
+      cur[st] = nx;
+    }
+    cur = nx;
+  }
+  return cur;
+}
+// 한 건을 적용하고, 되돌리기용 반대 작업을 돌려준다.
+function applyOp(root, op) {
+  const p = op.path || [];
+  if (op.op === "aput" || op.op === "adel") {
+    let arr = getAt(root, p);
+    if (!Array.isArray(arr)) {
+      if (op.op === "adel") return null;
+      if (!p.length) return null;
+      const par = parentOf(root, p);
+      if (!par || isObj(p[p.length - 1])) return null;
+      par[p[p.length - 1]] = arr = [];
+    }
+    const idx = arr.findIndex((x) => isObj(x) && String(x.id) === String(op.id));
+    const prev = idx >= 0 ? clone(arr[idx]) : undefined;
+    if (op.op === "aput") {
+      if (idx >= 0) arr[idx] = clone(op.value);
+      else arr.push(clone(op.value));
+    } else if (idx >= 0) arr.splice(idx, 1);
+    else return null;
+    return prev === undefined ? { op: "adel", path: p, id: op.id } : { op: "aput", path: p, id: op.id, value: prev };
+  }
+  if (!p.length) return null;
+  if (op.op === "ensure") {
+    if (getAt(root, p) !== undefined) return null;
+    const par0 = parentOf(root, p);
+    const k = p[p.length - 1];
+    if (!par0 || isObj(k) || Array.isArray(par0)) return null;
+    par0[k] = clone(op.value);
+    return { op: "del", path: p };
+  }
+  const last = p[p.length - 1];
+  const par = parentOf(root, p);
+  if (!par) return null;
+  if (isObj(last)) {
+    if (!Array.isArray(par)) return null;
+    const idx = par.findIndex((x) => isObj(x) && String(x.id) === String(last.i));
+    const prev = idx >= 0 ? clone(par[idx]) : undefined;
+    if (op.op === "set") {
+      if (idx >= 0) par[idx] = clone(op.value);
+      else par.push(clone(op.value));
+    } else if (idx >= 0) par.splice(idx, 1);
+    const ap = p.slice(0, -1);
+    return prev === undefined ? { op: "adel", path: ap, id: last.i } : { op: "aput", path: ap, id: last.i, value: prev };
+  }
+  const had = Object.prototype.hasOwnProperty.call(par, last);
+  const prev = had ? clone(par[last]) : undefined;
+  if (op.op === "set") par[last] = clone(op.value);
+  else if (op.op === "del") {
+    if (Array.isArray(par)) par.splice(Number(last), 1);
+    else delete par[last];
+  } else return null;
+  return had ? { op: "set", path: p, value: prev } : { op: "del", path: p };
+}
+function applyOps(root, ops) {
+  const inv = [];
+  for (const op of ops) {
+    const r = applyOp(root, op);
+    if (r) inv.push(r);
+  }
+  return inv.reverse();
+}
+
+/* ===== 직업 권한: 서버와 화면이 같은 규칙을 씁니다 ===== */
+const PERM_TABS = ["students", "laws", "present", "dili", "meal", "prize", "company", "tax", "bank", "bonds", "stocks", "pay"];
+const NOJOB = "_none";
+const PERM_DEFAULT = { students: "self" };
+const PERM_DEFAULT_NOJOB = { students: "self", laws: "view", meal: "view", bonds: "view", stocks: "view" };
+function permOfCore(data, jobId, tab) {
+  if (tab === "roster") return "none";
+  const v = (((data && data.perms) || {})[jobId] || {})[tab];
+  if (v === "none" || v === "edit" || v === "view" || v === "self" && tab === "students" || v === "trade" && (tab === "bonds" || tab === "stocks")) return v;
+  const d = jobId === NOJOB ? PERM_DEFAULT_NOJOB[tab] || "none" : PERM_DEFAULT[tab] || "view";
+  return d;
+}
+
+export { isObj, clone, diffState, getAt, applyOp, applyOps, permOfCore, PERM_TABS, NOJOB };

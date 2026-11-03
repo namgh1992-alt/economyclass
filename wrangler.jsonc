@@ -1,0 +1,17 @@
+{
+  // 우리 반 경제 교실 서버 설정 (Cloudflare Workers)
+  "name": "class-economy",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "durable_objects": {
+    "bindings": [
+      { "name": "CLASSROOM", "class_name": "Classroom" },
+      { "name": "REGISTRY", "class_name": "Registry" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Classroom", "Registry"] }
+  ],
+  "observability": { "enabled": true }
+}
