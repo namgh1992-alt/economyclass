@@ -554,7 +554,7 @@ export class Classroom extends DurableObject {
         if (!a || a.matured) return false;
         const f = p[3];
         if (f === "history") continue;
-        if (f === "price") { if (!traded) return false; continue; }
+        if (f === "price" || f === "vsum" || f === "vqty") { if (!traded) return false; continue; }
         if (f === "trades") { if (traded || o.op === "ensure") continue; return false; }
         if (f !== "orders") return false;
         const cur = a.orders || [];

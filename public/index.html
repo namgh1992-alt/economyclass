@@ -352,6 +352,19 @@
     });
     return { total: hold - buys + sells, buys, sells };
   };
+  /* 선생님 가격(기준) + 전체 체결 내역의 수량 가중 평균
+     주가 = (선생님 가격 × 발행 수량 + Σ 체결가×체결 수량) ÷ (발행 수량 + Σ 체결 수량) */
+  const volOf = (a) => {
+    if (a.vqty != null) return { sum: Number(a.vsum) || 0, qty: Number(a.vqty) || 0 };
+    const t = a.trades || [];
+    return { sum: t.reduce((x, r) => x + (Number(r.price) || 0) * (Number(r.qty) || 0), 0), qty: t.reduce((x, r) => x + (Number(r.qty) || 0), 0) };
+  };
+  const anchorW = (a) => Math.max(1, Number(a.qty) || 1);
+  const blendPrice = (a, anchor, vol) => {
+    const W = anchorW(a);
+    const v = vol || volOf(a);
+    return Math.max(1, Math.round((anchor * W + v.sum) / (W + v.qty)));
+  };
   const execTrade = (n, a, kind, buyer, seller, qty, price) => {
     const amount = qty * price;
     const date = toKey(new Date());
@@ -379,7 +392,11 @@
       n.holdings[seller][a.id] = { qty: Math.max(0, h.qty - qty), avg: h.avg };
       logTrade(seller, "sell");
     }
-    a.price = price;
+    const v0 = volOf(a);
+    a.vsum = v0.sum + price * qty;
+    a.vqty = v0.qty + qty;
+    // 선생님이 가격을 정한 뒤에는 그 가격과 전체 체결 내역을 수량만큼 섞어 주가를 정한다
+    a.price = Number(a.anchor) > 0 ? blendPrice(a, Number(a.anchor)) : price;
     a.trades = (a.trades || []).concat({ id: uid(), ts: Date.now(), date, price, qty, buyer, seller }).slice(-60);
     ensureHist(a);
   };
@@ -1695,6 +1712,8 @@ body{margin:0;}
 .ce .pp-it.on{box-shadow:0 0 0 3px #141414;}
 .ce .pp-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
 .ce .conn-wait{margin-left:6px;font-size:11.5px;font-weight:800;color:#B2453B;}
+.ce .px-after{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
+.ce .px-after span{font-size:12px;}
 .ce .pm.trade{background:#EEF6F1;color:#15795E;border-color:#A9D3BD;}
 .ce main.ro .trade-ok :is(input:not([type=range]):not([type=checkbox]),select,textarea){pointer-events:auto;background:#fff!important;color:var(--txt);}
 .ce main.ro :not(.modal-hd) > .xbtn.mine{visibility:visible;}
@@ -2728,14 +2747,23 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
       const p = numify(inp[a.id]);
       if (p <= 0) return;
       const from = Number(a.price) || 0;
-      ask(`'${a.name}' 현재가를 ${won(from)} → ${won(p)} FREE로 정합니다.
-보유한 학생들의 평가금액과 평가손익이 바로 바뀝니다.`, () => {
+      const v = volOf(a);
+      const to = blendPrice(a, p, v);
+      ask(`'${a.name}' 기준 가격을 ${won(p)} FREE로 정합니다.
+전체 체결 ${won(v.qty)}${a.unit}${v.qty ? `(평균 ${won(Math.round(v.sum / v.qty))})` : ""}를 수량만큼 섞어
+주가는 ${won(from)} → ${won(to)} FREE가 됩니다.
+앞으로 거래가 생길 때마다 이 방식으로 다시 계산됩니다.`, () => {
         update((n) => {
           const t = n.market[k].find((x) => x.id === a.id);
           if (!t) return;
-          t.price = p;
+          const vv = volOf(t);
+          t.vsum = vv.sum;
+          t.vqty = vv.qty;
+          t.anchor = p;
+          const pr = blendPrice(t, p, vv);
+          t.price = pr;
           ensureHist(t);
-          t.priceLog = (t.priceLog || []).concat({ date: toKey(new Date()), from, to: p }).slice(-60);
+          t.priceLog = (t.priceLog || []).concat({ date: toKey(new Date()), from, to: pr, anchor: p }).slice(-60);
         });
         setTo(a.id, "");
       }, "가격 정하기");
@@ -2743,7 +2771,7 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
     return E("section", { className: "card", style: { marginTop: 14 } },
       E("div", { className: "card-hd" },
         E("h2", null, "회사 · 종목 관리"),
-        E("span", { className: "hint" }, "적정 주가 = 기대감(PER) × EPS 입니다. 기대감을 비워 두면 5배로 계산합니다. 적정 주가를 누르면 새 가격 칸에 들어갑니다")),
+        E("span", { className: "hint" }, "적정 주가 = 기대감(PER) × EPS (비워 두면 5배). 새 가격을 적용하면 그 가격에 전체 체결 내역을 수량만큼 섞어 주가가 정해집니다: (새 가격 × 발행 수량 + 체결가 × 체결 수량의 합) ÷ (발행 수량 + 체결 수량의 합)")),
       all.length === 0 ? E("div", { className: "empty" }, "아직 발행된 주식이나 채권이 없습니다. 10 채권 · 11 주식 탭에서 먼저 발행해 주세요.") :
       E("div", { className: "scroll" },
         E("table", { className: "stbl", style: { minWidth: 1180 } },
@@ -2757,7 +2785,7 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
             E("th", { className: "r", style: { width: 120 } }, "적정 주가"),
             E("th", { style: { textAlign: "left" } }, "빠르게 바꾸기"),
             E("th", { className: "r", style: { width: 120 } }, "새 가격"),
-            E("th", { className: "r", style: { width: 84 } }, "등락"),
+            E("th", { className: "r", style: { width: 96 } }, "적용 후 주가"),
             E("th", { style: { width: 70 } }),
             E("th", { style: { width: 96 } }))),
           E("tbody", null, all.map(({ k, a }) => {
@@ -2780,8 +2808,8 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
               E("td", null, E("div", { className: "pxq" },
                 [-0.1, -0.05, 0.05, 0.1].map((r) => E("button", { key: r, className: "btn sm " + (r > 0 ? "up" : "dn"), disabled: !!a.matured, onClick: () => step(r) }, (r > 0 ? "+" : "−") + Math.abs(r * 100) + "%")))),
               E("td", { className: "r" }, E("input", { id: "px-" + a.id, className: "inp mini num", style: { width: 104 }, placeholder: won(cur), disabled: !!a.matured, value: inp[a.id] || "", onChange: (e) => setTo(a.id, e.target.value), onKeyDown: (e) => e.key === "Enter" && apply(k, a) })),
-              E("td", { className: "r " + tone(show, prev), style: { fontWeight: 700 } }, fmtPct(pctOf(show, prev))),
-              E("td", null, E("button", { className: "btn sm pri", disabled: !!a.matured || !(p > 0) || p === cur, onClick: () => apply(k, a) }, "적용")),
+              E("td", { className: "r " + tone(p > 0 ? blendPrice(a, p) : show, prev), style: { fontWeight: 700 } }, p > 0 ? E("div", { className: "px-after" }, E("b", { className: "num" }, won(blendPrice(a, p))), E("span", null, fmtPct(pctOf(blendPrice(a, p), prev)))) : fmtPct(pctOf(show, prev))),
+              E("td", null, E("button", { className: "btn sm pri", disabled: !!a.matured || !(p > 0), onClick: () => apply(k, a) }, "적용")),
               E("td", null, E("button", { className: "btn sm dgr-o", onClick: () => remove(k, a) }, k === "stocks" ? "회사 지우기" : "채권 지우기")));
           })))));
   }
