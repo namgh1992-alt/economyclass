@@ -565,6 +565,15 @@ export class Classroom extends DurableObject {
           const ex = find(o.id);
           if (!ex) {
             if (!isObj(o.value) || o.value.sid !== sid || !(Number(o.value.qty) > 0) || !(Number(o.value.price) > 0)) return false;
+            if (o.value.side === "sell") {
+              // 자기 계좌에 있는 수량만큼만 팔 수 있다
+              const have = Number((((d.holdings || {})[sid] || {})[a.id] || {}).qty) || 0;
+              const listed = cur.filter((x) => x.side === "sell" && x.sid === sid).reduce((t, x) => t + (Number(x.qty) || 0), 0);
+              if (Number(o.value.qty) + listed > have) return false;
+            } else if (o.value.side === "buy") {
+              const bal = (d.tx || []).filter((t) => t.sid === sid).reduce((t, x) => t + (x.type === "in" ? Number(x.amount) || 0 : -(Number(x.amount) || 0)), 0);
+              if (Number(o.value.qty) * Number(o.value.price) > bal) return false;
+            } else return false;
             continue;
           }
           if (!traded || !isObj(o.value) || o.value.sid !== ex.sid || Number(o.value.qty) > Number(ex.qty)) return false;
@@ -598,6 +607,10 @@ export class Classroom extends DurableObject {
       }
       return false;
     }
+    // 거래 뒤 내 통장이 마이너스가 되면 안 된다
+    const bal0 = (d.tx || []).filter((t) => t.sid === sid).reduce((t, x) => t + (x.type === "in" ? Number(x.amount) || 0 : -(Number(x.amount) || 0)), 0);
+    const delta = ops.filter((o) => (o.path || [])[0] === "tx" && o.op === "aput" && isObj(o.value) && o.value.sid === sid).reduce((t, o) => t + (o.value.type === "in" ? Number(o.value.amount) || 0 : -(Number(o.value.amount) || 0)), 0);
+    if (delta < 0 && bal0 + delta < 0) return false;
     return true;
   }
   /* --- 학생 입력 검사 --- */

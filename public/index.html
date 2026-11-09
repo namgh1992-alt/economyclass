@@ -1678,10 +1678,27 @@ body{margin:0;}
 .ce .pr-job-hd .jphoto.sm .jphoto-ph b{width:28px;height:28px;font-size:12px;}
 /* 회사 */
 .ce main.ro .divbar,.ce main.ro .mk-admin{display:none;}
+/* 직업 사진: 16:9 그림 */
+.ce .jphoto{aspect-ratio:16/9;}
+.ce .scard .jphoto{aspect-ratio:16/9;}
+.ce .jcard-ph{grid-template-columns:150px minmax(0,1fr);}
+.ce .jcard-ph-btn{border:0;padding:0;background:none;cursor:pointer;display:block;width:100%;}
+.ce .jcard-ph-btn:hover .jphoto{box-shadow:0 0 0 2px var(--gold);}
+.ce .jcard-ph-t{display:flex;flex-direction:column;align-items:flex-start;gap:5px;}
+.ce .jcard-ph-t span{font-weight:700;color:#333;}
+.ce .pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.ce .pp-it{border:0;padding:0;background:#fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer;text-align:left;font:inherit;}
+.ce .pp-it img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;}
+.ce .pp-it span{display:flex;align-items:center;gap:6px;padding:7px 9px;font-size:14px;font-weight:800;}
+.ce .pp-it em{font-style:normal;font-size:11px;color:#15795E;background:#EEF6F1;padding:1px 6px;border-radius:4px;}
+.ce .pp-it:hover{box-shadow:0 0 0 2px var(--gold);}
+.ce .pp-it.on{box-shadow:0 0 0 3px #141414;}
+.ce .pp-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
 .ce .pm.trade{background:#EEF6F1;color:#15795E;border-color:#A9D3BD;}
 .ce main.ro .trade-ok :is(input:not([type=range]):not([type=checkbox]),select,textarea){pointer-events:auto;background:#fff!important;color:var(--txt);}
 .ce main.ro :not(.modal-hd) > .xbtn.mine{visibility:visible;}
-.ce .ord-me{display:flex;align-items:center;font-weight:800;background:#F5F1E8!important;}
+.ce .ord-me{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:800;background:#F5F1E8!important;height:auto;min-height:40px;padding-top:6px;padding-bottom:6px;}
+.ce .ord-me span{font-weight:600;font-size:13.5px;color:var(--mut);}
 .ce .term{cursor:pointer;text-decoration:underline dotted;text-decoration-color:#B5A98C;text-underline-offset:3px;text-decoration-thickness:1.5px;border-radius:2px;}
 .ce .term::after{content:"?";display:inline-grid;place-items:center;width:13px;height:13px;margin-left:3px;border-radius:50%;background:#E9E2D2;color:#7B6342;font-size:9.5px;font-weight:800;vertical-align:2px;text-decoration:none;}
 .ce .term:hover,.ce .term[aria-expanded=true]{color:#7B6342;text-decoration-color:#7B6342;}
@@ -2404,7 +2421,20 @@ body{margin:0;}
   /* ---------- 직업 사진 ----------
      사진을 받으면 아래 JOB_PHOTOS에 "사진 이름": "사진 주소(또는 data:image/...)" 로 넣습니다.
      직업 이름과 사진 이름이 같으면 자동으로 연결되고, 다르면 '직업과 주급' 카드에서 골라 연결합니다. */
-  const JOB_PHOTOS = {};
+  const JOB_PHOTOS = {
+    "학급회장": "jobs/president.webp",
+    "우리은행": "jobs/bank.webp",
+    "국세청": "jobs/tax.webp",
+    "신평증권": "jobs/securities.webp",
+    "환경부": "jobs/env.webp",
+    "학습부": "jobs/study.webp",
+    "성실부": "jobs/diligence.webp",
+    "급식체크부": "jobs/meal.webp",
+    "캠페인부": "jobs/campaign.webp",
+    "전자부": "jobs/digital.webp",
+    "보드회사원": "jobs/board.webp",
+    "마트회사원": "jobs/mart.webp"
+  };
   const normJob = (x) => String(x || "").replace(/\s+/g, "").toLowerCase();
   const jobPhotoKey = (job) => {
     if (!job) return null;
@@ -2422,7 +2452,21 @@ body{margin:0;}
       src ? E("img", { src, alt: label + " 사진" }) : E("span", { className: "jphoto-ph", "aria-label": label + " 사진 자리" }, E("b", null, label.slice(0, 1)), !small && E("em", null, job ? "사진 준비 중" : label)));
   }
   /* ---------- 주급 지급 · 직업 카드 ---------- */
+  function PhotoPicker({ job, onPick, onClose }) {
+    const cur = jobPhotoKey(job);
+    const auto = jobPhotoKey({ name: job.name });
+    return E(Modal, { title: `'${job.name || "직업"}' 사진 고르기`, onClose },
+      E("div", { className: "modal-bd" },
+        E("div", { className: "pp-grid" },
+          Object.keys(JOB_PHOTOS).map((k) => E("button", { key: k, className: "pp-it" + (cur === k ? " on" : ""), onClick: () => { onPick(k); onClose(); } },
+            E("img", { src: JOB_PHOTOS[k], alt: "", loading: "lazy" }),
+            E("span", null, k, auto === k && E("em", null, "이름 일치"))))),
+        E("div", { className: "pp-ft" },
+          E("button", { className: "btn", onClick: () => { onPick(null); onClose(); } }, auto ? "이름에 맞는 사진 쓰기 (자동)" : "사진 빼기"),
+          E("button", { className: "btn pri", onClick: onClose }, "닫기"))));
+  }
   function JobEditor({ data, update, ask }) {
+    const [pickJob, setPickJob] = useState(null);
     const [nj, setNj] = useState({ name: "", wage: "", duties: "" });
     const add = () => {
       if (!nj.name.trim()) return;
@@ -2452,14 +2496,12 @@ body{margin:0;}
                 }))
               }, "×")),
             E("div", { className: "jcard-ph" },
-              E(JobPhoto, { job: j }),
+              E("button", { className: "jcard-ph-btn", onClick: () => setPickJob(j.id), title: "직업 사진 고르기" }, E(JobPhoto, { job: j })),
               E("div", { className: "jcard-ph-t" },
                 E("em", null, "직업 사진"),
-                Object.keys(JOB_PHOTOS).length
-                  ? E("select", { id: "job-photo-" + j.id, className: "inp mini", "aria-label": "직업 사진 고르기", value: j.photoKey && JOB_PHOTOS[j.photoKey] ? j.photoKey : "", onChange: (e) => update((n) => { n.jobs[i].photoKey = e.target.value || null; }) },
-                      E("option", { value: "" }, jobPhotoKey({ name: j.name }) ? "이름에 맞는 사진 (자동)" : "사진 없음"),
-                      Object.keys(JOB_PHOTOS).map((k) => E("option", { key: k, value: k }, k)))
-                  : E("span", null, "사진이 준비되면 자동으로 들어갑니다."))),
+                E("span", null, jobPhotoKey(j) || "아직 없음"),
+                E("button", { className: "btn sm", onClick: () => setPickJob(j.id) }, "사진 고르기"))),
+            pickJob === j.id && E(PhotoPicker, { job: j, onClose: () => setPickJob(null), onPick: (k) => update((n) => { n.jobs[i].photoKey = k; }) }),
             E("label", { className: "fld", htmlFor: "job-duty-" + j.id }, "하는 일"),
             E("textarea", { id: "job-duty-" + j.id, className: "inp jduty", rows: 3, placeholder: "한 줄에 하나씩 적어 주세요\n예) 매일 아침 통장 입금 확인하기", value: j.duties || "", onChange: (e) => update((n) => { n.jobs[i].duties = e.target.value; }) }),
             E("div", { className: "jcard-ft" }, names.length ? "맡은 학생 · " + names.join(", ") : "아직 맡은 학생이 없습니다"));
@@ -2669,6 +2711,16 @@ body{margin:0;}
   }
   function PriceDesk({ data, update, ask }) {
     const [inp, setInp] = useState({});
+    const remove = (k, a) => {
+      const owners = ownersOf(data, a.id).filter((o) => o.sid !== "gov" && o.sid !== "bank").length;
+      ask(`${k === "stocks" ? "회사" : "채권"} '${a.name}'을(를) 지웁니다.
+${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 일 계획, 매출·원가 기록이 함께 사라집니다." : "채권 시장에서 사라집니다."}${owners ? `
+지금 ${owners}명이 가지고 있는 수량도 함께 사라집니다. (이미 오간 통장 기록은 그대로 남습니다)` : ""}
+되돌릴 수 없습니다.`, () => update((n) => {
+        n.market[k] = (n.market[k] || []).filter((x) => x.id !== a.id);
+        Object.values(n.holdings || {}).forEach((m) => { if (m) delete m[a.id]; });
+      }), k === "stocks" ? "회사 지우기" : "채권 지우기");
+    };
     const all = ["stocks", "bonds"].flatMap((k) => (data.market[k] || []).map((a) => ({ k, a })));
     const setTo = (id, v) => setInp((s) => ({ ...s, [id]: v }));
     const apply = (k, a) => {
@@ -2689,11 +2741,11 @@ body{margin:0;}
     };
     return E("section", { className: "card", style: { marginTop: 14 } },
       E("div", { className: "card-hd" },
-        E("h2", null, "종목 현재가 정하기"),
+        E("h2", null, "회사 · 종목 관리"),
         E("span", { className: "hint" }, "적정 주가 = 기대감(PER) × EPS 입니다. 기대감을 비워 두면 5배로 계산합니다. 적정 주가를 누르면 새 가격 칸에 들어갑니다")),
       all.length === 0 ? E("div", { className: "empty" }, "아직 발행된 주식이나 채권이 없습니다. 10 채권 · 11 주식 탭에서 먼저 발행해 주세요.") :
       E("div", { className: "scroll" },
-        E("table", { className: "stbl", style: { minWidth: 1080 } },
+        E("table", { className: "stbl", style: { minWidth: 1180 } },
           E("thead", null, E("tr", null,
             E("th", { style: { textAlign: "left", width: 54 } }, "구분"),
             E("th", { style: { textAlign: "left" } }, "종목"),
@@ -2705,7 +2757,8 @@ body{margin:0;}
             E("th", { style: { textAlign: "left" } }, "빠르게 바꾸기"),
             E("th", { className: "r", style: { width: 120 } }, "새 가격"),
             E("th", { className: "r", style: { width: 84 } }, "등락"),
-            E("th", { style: { width: 70 } }))),
+            E("th", { style: { width: 70 } }),
+            E("th", { style: { width: 96 } }))),
           E("tbody", null, all.map(({ k, a }) => {
             const prev = prevClose(a);
             const cur = Number(a.price) || 0;
@@ -2727,7 +2780,8 @@ body{margin:0;}
                 [-0.1, -0.05, 0.05, 0.1].map((r) => E("button", { key: r, className: "btn sm " + (r > 0 ? "up" : "dn"), disabled: !!a.matured, onClick: () => step(r) }, (r > 0 ? "+" : "−") + Math.abs(r * 100) + "%")))),
               E("td", { className: "r" }, E("input", { id: "px-" + a.id, className: "inp mini num", style: { width: 104 }, placeholder: won(cur), disabled: !!a.matured, value: inp[a.id] || "", onChange: (e) => setTo(a.id, e.target.value), onKeyDown: (e) => e.key === "Enter" && apply(k, a) })),
               E("td", { className: "r " + tone(show, prev), style: { fontWeight: 700 } }, fmtPct(pctOf(show, prev))),
-              E("td", null, E("button", { className: "btn sm pri", disabled: !!a.matured || !(p > 0) || p === cur, onClick: () => apply(k, a) }, "적용")));
+              E("td", null, E("button", { className: "btn sm pri", disabled: !!a.matured || !(p > 0) || p === cur, onClick: () => apply(k, a) }, "적용")),
+              E("td", null, E("button", { className: "btn sm dgr-o", onClick: () => remove(k, a) }, k === "stocks" ? "회사 지우기" : "채권 지우기")));
           })))));
   }
   function RosterBody({ data, update, setData, setTab, ask, notice, room, setRoom }) {
@@ -4599,23 +4653,23 @@ ${names}
     const submit = () => {
       if (!a) return;
       if (trade && !trade.sid) return notice("미리보기에서는 주문할 수 없습니다. 학생으로 들어오면 자기 이름으로 주문합니다.");
-      if (trade && ord.sid !== trade.sid) return setOrd({ ...ord, sid: trade.sid });
+      const sid = trade ? trade.sid : ord.sid;
       if (a.matured) return notice("만기된 채권은 거래할 수 없습니다.");
       const qty = numify(ord.qty);
       const price = numify(ord.price);
-      if (!ord.sid || qty <= 0 || price <= 0) return notice("거래 주체, 수량, 희망 금액을 모두 입력해 주세요.");
-      if (ord.side === "buy" && usesCash(ord.sid)) {
-        const bal = data.tx.filter((t) => t.sid === ord.sid).reduce((s, t) => s + (t.type === "in" ? t.amount : -t.amount), 0);
+      if (!sid || qty <= 0 || price <= 0) return notice(trade ? "수량과 희망 금액을 입력해 주세요." : "거래 주체, 수량, 희망 금액을 모두 입력해 주세요.");
+      if (ord.side === "buy" && usesCash(sid)) {
+        const bal = data.tx.filter((t) => t.sid === sid).reduce((s, t) => s + (t.type === "in" ? t.amount : -t.amount), 0);
         if (qty * price > bal) return notice(`통장 잔액이 부족합니다.
 필요 금액 ${won(qty * price)} FREE · 현재 잔액 ${won(bal)} FREE`);
       }
       if (ord.side === "sell") {
-        const have = holdingOf(data, ord.sid, a.id).qty;
-        const listed = (a.orders || []).filter((o) => o.side === "sell" && o.sid === ord.sid).reduce((s, o) => s + o.qty, 0);
+        const have = holdingOf(data, sid, a.id).qty;
+        const listed = (a.orders || []).filter((o) => o.side === "sell" && o.sid === sid).reduce((s, o) => s + o.qty, 0);
         if (qty + listed > have) return notice(`보유 수량이 부족합니다.
 보유 ${have}${a.unit} · 이미 매도 등록 ${listed}${a.unit}`);
       }
-      (trade ? trade.update : update)((n) => placeOrder(n, kind, a.id, { side: ord.side, sid: ord.sid, qty, price }));
+      (trade ? trade.update : update)((n) => placeOrder(n, kind, a.id, { side: ord.side, sid, qty, price }));
       setOrd({ ...ord, qty: "", price: "" });
     };
     const formRef = useRef(null);
@@ -4649,7 +4703,7 @@ ${names}
               E("button", { className: "sell" + (ord.side === "sell" ? " on" : ""), onClick: () => setOrd({ ...ord, side: "sell" }) }, "매도"))),
           E("div", { className: "ordf-f", style: { minWidth: 170, flex: "1 1 170px" } },
             E("label", { className: "fld", htmlFor: "ord-sid" }, T("거래 주체")),
-            trade ? E("div", { className: "inp ord-me" }, trade.sid ? actorName(data, trade.sid) : "학생 본인") :
+            trade ? E("div", { className: "inp ord-me" }, trade.sid ? E(React.Fragment, null, E("b", null, "내 계좌 · ", actorName(data, trade.sid)), E("span", { className: "num" }, "잔액 ", won(data.tx.filter((t) => t.sid === trade.sid).reduce((s, t) => s + (t.type === "in" ? t.amount : -t.amount), 0)), " FREE · 보유 ", won(holdingOf(data, trade.sid, a.id).qty), a.unit)) : "학생 본인 계좌") :
             E("select", { id: "ord-sid", className: "inp", value: ord.sid, onChange: (e) => setOrd({ ...ord, sid: e.target.value }) },
               E("option", { value: "" }, "선택"),
               E("option", { value: "bank" }, "은행 · 자금 무제한 (", holdingOf(data, "bank", a.id).qty, a.unit, " 보유)"),
@@ -4685,12 +4739,12 @@ ${names}
               E("td", null, (!trade || o.sid === trade.sid) && E("button", { className: "xbtn" + (trade ? " mine" : ""), title: "주문 취소", onClick: () => cancelOrder(o.id) }, "×")))))))),
       E("section", { className: "card", style: { marginTop: 14 } },
         E("div", { className: "card-hd" },
-          E("h2", null, "보유 현황"),
+          E("h2", null, trade ? "내 보유 현황" : "보유 현황"),
           E("span", { className: "hint" }, "평가손익 = (현재단가 − 매수단가) × 보유수량")),
         E(HoldTable, {
           c1: ["보유자", "매수단가"],
-          empty: "아직 보유한 사람이 없습니다.",
-          rows: ownersOf(data, a.id).map((o) => {
+          empty: trade ? "아직 이 종목을 가지고 있지 않습니다." : "아직 보유한 사람이 없습니다.",
+          rows: ownersOf(data, a.id).filter((o) => !trade || o.sid === trade.sid).map((o) => {
             const hh = holdingOf(data, o.sid, a.id);
             return { key: o.sid, title: nameOf(o.sid), sub: won(hh.avg), qty: hh.qty, unit: a.unit, value: hh.qty * a.price, cost: hh.qty * hh.avg };
           })
