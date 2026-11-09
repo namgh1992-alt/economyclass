@@ -1694,6 +1694,7 @@ body{margin:0;}
 .ce .pp-it:hover{box-shadow:0 0 0 2px var(--gold);}
 .ce .pp-it.on{box-shadow:0 0 0 3px #141414;}
 .ce .pp-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.ce .conn-wait{margin-left:6px;font-size:11.5px;font-weight:800;color:#B2453B;}
 .ce .pm.trade{background:#EEF6F1;color:#15795E;border-color:#A9D3BD;}
 .ce main.ro .trade-ok :is(input:not([type=range]):not([type=checkbox]),select,textarea){pointer-events:auto;background:#fff!important;color:var(--txt);}
 .ce main.ro :not(.modal-hd) > .xbtn.mine{visibility:visible;}
@@ -2006,7 +2007,7 @@ body{margin:0;}
         E("div", { className: "cover-meta" },
           room && E("span", { className: "roomtag" }, room),
           E("span", { className: "meta-n" }, "학생 ", E("b", null, data.students.length), "명"),
-          remote && E(ConnPill, { conn: sync.conn }),
+          remote && E(ConnPill, { conn: sync.conn, waiting: sync.waiting }),
           viewJobObj && E(JobPhoto, { job: viewJobObj.id === NOJOB ? null : viewJobObj, small: true }),
           viewJobObj ? E("span", { className: "who-chip st" }, meName ? `${meName} · ${viewJobObj.name}` : viewJobObj.name + " 미리보기") : E("span", { className: "who-chip" }, "선생님"),
           !role.preview && E("button", { className: "btn sm", onClick: logout }, "나가기"))),
@@ -2415,7 +2416,7 @@ body{margin:0;}
                   }),
                   E("td", null, E("button", { className: "btn sm", onClick: () => preview(j.id) }, "미리보기")));
               })))),
-      E("p", { className: "vhint" }, "학생은 자기 번호와 직접 정한 비밀번호로 들어오고, 그 학생이 맡은 직업의 권한이 적용됩니다. 자기 기록은 직업 권한이 있어도 고칠 수 없습니다. 미리보기로 직업마다 보이는 화면을 확인하세요."));
+      E("p", { className: "vhint" }, "학생은 자기 번호와 직접 정한 비밀번호로 들어오고, 그 학생이 맡은 직업의 권한이 적용됩니다. 입력 권한이 있는 화면에서는 자기 기록도 함께 입력할 수 있고, 모든 입력은 활동 기록에 남아 선생님이 되돌릴 수 있습니다. 미리보기로 직업마다 보이는 화면을 확인하세요."));
   }
 
   /* ---------- 직업 사진 ----------
@@ -5832,8 +5833,32 @@ ${lines}
     const R = useRef(null);
     if (!R.current) R.current = { data: null, seq: 0, inflight: [], outbox: [], sending: false, batch: 0, client: uid(), ws: null, alive: true };
     const [conn, setConn] = useState(remote ? "connecting" : "local");
+    const [waiting, setWaiting] = useState(0);
     const cid = remote && remote.classId;
     const tok = remote && remote.token;
+    /* 아직 서버에 못 간 입력은 이 기기에도 적어 둔다 (새로고침·끊김에도 남도록) */
+    const OBK = "ce-outbox:" + cid;
+    const saveBox = () => {
+      const S = R.current;
+      const groups = S.inflight.map((b) => b.ops).concat(S.outbox);
+      setWaiting(groups.length);
+      try {
+        if (groups.length) localStorage.setItem(OBK, JSON.stringify({ tok, groups }));
+        else localStorage.removeItem(OBK);
+      } catch (e) {}
+    };
+    if (remote && !R.current.restored) {
+      R.current.restored = true;
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith("ce-outbox:") && k !== OBK) localStorage.removeItem(k);
+        }
+        const saved = JSON.parse(localStorage.getItem(OBK) || "null");
+        if (saved && saved.tok === tok && Array.isArray(saved.groups)) R.current.outbox = saved.groups.filter((g) => Array.isArray(g) && g.length);
+        else localStorage.removeItem(OBK);
+      } catch (e) {}
+    }
     const teacher = !!remote && remote.role === "teacher";
     const kick = (why) => remote && remote.onLogout(why);
     const pending = () => R.current.inflight.flatMap((b) => b.ops).concat(R.current.outbox.flat());
@@ -5860,31 +5885,73 @@ ${lines}
       applyOps(d, pending());
       R.current.seq = Math.max(R.current.seq, seq);
       commit(d);
+      if (R.current.ws && R.current.ws.readyState === 1) setConn("on");
     };
+    // 서버가 잠깐 멈췄거나(5xx) 바쁜(429) 경우, 인터넷이 끊긴 경우에는 입력을 버리지 않고 다시 보낸다
+    const retryable = (r) => r.network || !r.status || r.status >= 500 || r.status === 429 || r.status === 408;
     const flush = async () => {
       const S = R.current;
       if (S.sending) return;
       S.sending = true;
+      let wait = 1500;
       while (S.outbox.length && S.alive) {
-        const ops = S.outbox.splice(0).flat();
+        const groups = S.outbox.splice(0);
+        const ops = groups.flat();
         const batch = `${S.client}:${++S.batch}`;
         S.inflight.push({ batch, ops });
+        saveBox();
         const r = await api(`c/${cid}/ops`, { ops, client: batch }, tok);
         S.inflight = S.inflight.filter((b) => b.batch !== batch);
-        if (r.ok) continue;
-        if (r.network) {
-          S.outbox.unshift(ops);
-          setConn("offline");
-          await sleep(2500);
+        if (r.ok) {
+          wait = 1500;
+          saveBox();
+          if (S.ws && S.ws.readyState === 1) setConn("on");
           continue;
         }
-        S.outbox = [];
-        flash(r.error);
+        if (retryable(r)) {
+          S.outbox.unshift(...groups);
+          saveBox();
+          setConn("offline");
+          await sleep(wait);
+          wait = Math.min(10000, wait * 1.6);
+          continue;
+        }
         if (r.status === 401) {
+          S.outbox = [];
+          saveBox();
+          flash(r.error);
           kick("다시 로그인해 주세요.");
           break;
         }
-        await fetchState();
+        // 여러 입력을 한 번에 보냈다가 거절되면, 하나씩 다시 보내서 막힌 것만 빼고 나머지는 저장한다
+        if (groups.length > 1) {
+          S.outbox.unshift(...groups.map((g) => [g]).map((x) => x[0]));
+          S.single = (S.single || 0) + groups.length;
+        } else flash(r.error);
+        saveBox();
+        if (groups.length <= 1) await fetchState();
+        if (S.single) {
+          while (S.single > 0 && S.outbox.length && S.alive) {
+            S.single--;
+            const g = S.outbox.shift();
+            const b2 = `${S.client}:${++S.batch}`;
+            S.inflight.push({ batch: b2, ops: g });
+            const r2 = await api(`c/${cid}/ops`, { ops: g, client: b2 }, tok);
+            S.inflight = S.inflight.filter((b) => b.batch !== b2);
+            if (!r2.ok && retryable(r2)) {
+              S.outbox.unshift(g);
+              S.single++;
+              saveBox();
+              setConn("offline");
+              await sleep(wait);
+              continue;
+            }
+            if (!r2.ok) flash(r2.error);
+            saveBox();
+          }
+          S.single = 0;
+          await fetchState();
+        }
       }
       S.sending = false;
     };
@@ -5897,6 +5964,7 @@ ${lines}
       if (!ops.length) return;
       commit(n);
       R.current.outbox.push(ops);
+      saveBox();
       flush();
     };
     const setDataR = async (val) => {
@@ -5925,6 +5993,7 @@ ${lines}
           retry = 0;
           setConn("on");
           fetchState();
+          flush();
           clearInterval(ping);
           ping = setInterval(() => {
             try {
@@ -5974,12 +6043,26 @@ ${lines}
           if (!S.alive || stop) return;
           setConn("offline");
           retry++;
-          setTimeout(connect, Math.min(10000, 700 * retry));
+          setTimeout(connect, Math.min(5000, 600 * retry));
         };
       };
       fetchState();
       connect();
+      flush();
+      const onOnline = () => {
+        flush();
+        if (!S.ws || S.ws.readyState !== 1) {
+          retry = 0;
+          try { S.ws && (S.ws.onclose = null, S.ws.close()); } catch (e) {}
+          connect();
+        }
+      };
+      const onVis = () => { if (document.visibilityState === "visible") onOnline(); };
+      document.addEventListener("visibilitychange", onVis);
+      window.addEventListener("online", onOnline);
       return () => {
+        window.removeEventListener("online", onOnline);
+        document.removeEventListener("visibilitychange", onVis);
         S.alive = false;
         clearInterval(ping);
         clearTimeout(refreshT);
@@ -5988,11 +6071,11 @@ ${lines}
         } catch (e) {}
       };
     }, [cid, tok]);
-    return { update, setDataR, conn };
+    return { update, setDataR, conn, waiting };
   }
-  function ConnPill({ conn }) {
+  function ConnPill({ conn, waiting }) {
     const t = { on: ["실시간 연결", "on"], connecting: ["연결 중", "wait"], offline: ["다시 연결 중", "off"] }[conn];
-    return t ? E("span", { className: "conn " + t[1], role: "status" }, E("i", null), t[0]) : null;
+    return t ? E("span", { className: "conn " + t[1], role: "status", title: waiting ? "입력한 내용은 이 기기에 안전하게 보관되어 있고, 연결되면 자동으로 저장됩니다" : "" }, E("i", null), t[0], waiting > 0 && E("b", { className: "conn-wait" }, "저장 대기 ", waiting, "건")) : null;
   }
 
   /* 첫 화면 결정: 서버가 있으면 온라인, 없으면 이 기기 저장 */
@@ -6497,7 +6580,7 @@ ${lines}
       H("제9조 안전성 확보 조치"),
       UL([
         "선생님·시스템 관리자 비밀번호는 되돌릴 수 없는 방식(PBKDF2)으로 암호화해 저장합니다. 학생 비밀번호는 담임 선생님이 확인하고 바꿔 줄 수 있도록 서버 저장소에 따로 보관하며 학생 화면으로는 보내지 않습니다. 여러 번 틀리면 로그인을 잠급니다.",
-        "선생님, 학생, 시스템 관리자의 권한을 나누고, 학생이 고칠 수 있는 범위를 서버에서 확인합니다. 학생은 자기 기록을 직접 바꿀 수 없습니다.",
+        "선생님, 학생, 시스템 관리자의 권한을 나누고, 학생이 고칠 수 있는 범위를 서버에서 확인합니다. 학생은 자기 직업에 입력 권한이 있는 화면만 고칠 수 있고, 모든 입력은 활동 기록에 남습니다.",
         "학생은 선생님이 수업을 연 동안에만 로그인할 수 있고, 수업을 끝내면 모든 학생 로그인이 지워집니다.",
         "직업 권한에 따라 학생 기기로 보내는 자료를 줄이며, 학생 기기에는 학급 자료를 남기지 않습니다.",
         "모든 전송 구간을 암호화(HTTPS)하고, 누가 언제 무엇을 바꿨는지 활동 기록을 남깁니다."

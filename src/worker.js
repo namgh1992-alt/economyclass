@@ -328,7 +328,6 @@ function areaOf(p) {
 }
 const WEEK_TABS = ["present", "dili", "meal", "prize", "pay"];
 const TX_TABS = ["bank", "tax", "pay", "stocks", "bonds", "company"];
-const touchesSelf = (v, sid) => isObj(v) && (v.sid === sid || v.buyer === sid || v.seller === sid);
 
 export class Classroom extends DurableObject {
   constructor(ctx, env) {
@@ -634,14 +633,7 @@ export class Classroom extends DurableObject {
       const area = areaOf(p);
       if (!area) return "이 부분은 선생님만 바꿀 수 있습니다.";
       if (!can(area)) return "이 화면은 입력 권한이 없습니다.";
-      if (p.some((st) => st === sid)) return "자기 기록은 직접 바꿀 수 없습니다. 다른 친구나 선생님께 부탁하세요.";
-      if (touchesSelf(o.value, sid)) return "자기 거래는 직접 처리할 수 없습니다. 다른 친구나 선생님께 부탁하세요.";
-      if (o.op === "adel" || o.op === "set" || o.op === "del") {
-        const cur = o.op === "adel" ? getAt(d, p.concat({ i: o.id })) : getAt(d, p);
-        if (touchesSelf(cur, sid)) return "자기 거래는 직접 처리할 수 없습니다.";
-        const owner = p.findIndex((st) => isObj(st));
-        if (owner >= 0 && touchesSelf(getAt(d, p.slice(0, owner + 1)), sid)) return "자기 거래는 직접 처리할 수 없습니다.";
-      }
+      // 입력 권한이 있는 화면이면 자기 기록도 입력할 수 있다 (모든 입력은 활동 기록에 남고 선생님이 되돌릴 수 있음)
     }
     return null;
   }
