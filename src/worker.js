@@ -1,5 +1,95 @@
 import { DurableObject } from "cloudflare:workers";
-import { isObj, clone, getAt, applyOps, permOfCore, PERM_TABS, NOJOB } from "./core.js";
+import { isObj, clone, getAt, applyOps, diffState, permOfCore, PERM_TABS, NOJOB } from "./core.js";
+
+/* ===== 자동 체결 =====
+   여러 패드가 거의 동시에 주문하면 서로의 주문을 못 보고 둘 다 대기 주문으로 남을 수 있다.
+   서버가 사고팔 가격이 겹친 주문을 찾아 먼저 들어온 주문 가격으로 체결한다. */
+const kst = () => new Date(Date.now() + 9 * 3600e3);
+const p2 = (n) => String(n).padStart(2, "0");
+const keyOf = (d) => `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())}`;
+const mondayKey = () => {
+  const d = kst();
+  return keyOf(new Date(d.getTime() - ((d.getUTCDay() + 6) % 7) * 864e5));
+};
+const mkId = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+const wonS = (n) => Math.round(Number(n) || 0).toLocaleString("ko-KR");
+const cashUser = (sid) => sid !== "gov" && sid !== "bank";
+const balOf = (n, sid) => (n.tx || []).filter((t) => t.sid === sid).reduce((t, x) => t + (x.type === "in" ? Number(x.amount) || 0 : -(Number(x.amount) || 0)), 0);
+function srvHist(a) {
+  const today = keyOf(kst());
+  if (!a.history || !a.history.length) a.history = [{ date: today, price: a.price }];
+  let last = a.history[a.history.length - 1];
+  let g = 0;
+  while (last.date < today && g++ < 400) {
+    a.history.push({ date: keyOf(new Date(Date.parse(last.date + "T00:00:00Z") + 864e5)), price: a.price });
+    last = a.history[a.history.length - 1];
+  }
+  last.price = a.price;
+  if (a.history.length > 400) a.history = a.history.slice(-400);
+}
+function srvTrade(n, a, kind, buyer, seller, qty, price) {
+  const amount = qty * price;
+  const date = keyOf(kst());
+  const wk = mondayKey();
+  if (!n.holdings) n.holdings = {};
+  if (!n.realized) n.realized = [];
+  if (!n.trades) n.trades = [];
+  if (!n.tx) n.tx = [];
+  const unit = a.unit || (kind === "bonds" ? "좌" : "주");
+  const log = (sid, side) => n.trades.push({ id: mkId(), sid, side, kind, aid: a.id, qty, price, amount, date, wkey: wk });
+  if (buyer !== "gov") {
+    if (cashUser(buyer)) n.tx.push({ id: mkId(), sid: buyer, date, type: "out", amount, memo: `${a.name} 매수 ${qty}${unit} @${wonS(price)}`, seq: Date.now() });
+    if (!n.holdings[buyer]) n.holdings[buyer] = {};
+    const h = n.holdings[buyer][a.id] || { qty: 0, avg: 0 };
+    const nq = h.qty + qty;
+    n.holdings[buyer][a.id] = { qty: nq, avg: nq ? Math.round((h.qty * h.avg + amount) / nq) : 0 };
+    log(buyer, "buy");
+  }
+  if (seller !== "gov") {
+    if (cashUser(seller)) n.tx.push({ id: mkId(), sid: seller, date, type: "in", amount, memo: `${a.name} 매도 ${qty}${unit} @${wonS(price)}`, seq: Date.now() });
+    if (!n.holdings[seller]) n.holdings[seller] = {};
+    const h = n.holdings[seller][a.id] || { qty: 0, avg: 0 };
+    n.realized.push({ id: mkId(), sid: seller, kind, wkey: wk, date, amount: qty * (price - (Number(h.avg) || 0)), name: a.name, qty });
+    n.holdings[seller][a.id] = { qty: Math.max(0, h.qty - qty), avg: h.avg };
+    log(seller, "sell");
+  }
+  const t = a.trades || [];
+  const v = a.vqty != null ? { sum: Number(a.vsum) || 0, qty: Number(a.vqty) || 0 } : { sum: t.reduce((x, r) => x + (Number(r.price) || 0) * (Number(r.qty) || 0), 0), qty: t.reduce((x, r) => x + (Number(r.qty) || 0), 0) };
+  a.vsum = v.sum + amount;
+  a.vqty = v.qty + qty;
+  const W = Math.max(1, Number(a.qty) || 1);
+  a.price = Number(a.anchor) > 0 ? Math.max(1, Math.round((Number(a.anchor) * W + a.vsum) / (W + a.vqty))) : price;
+  a.trades = t.concat({ id: mkId(), ts: Date.now(), date, price, qty, buyer, seller }).slice(-60);
+  srvHist(a);
+}
+const canMatch = (a) => {
+  const o = a.orders || [];
+  return !a.matured && o.some((b) => b.side === "buy" && o.some((s) => s.side === "sell" && s.sid !== b.sid && Number(s.price) <= Number(b.price)));
+};
+function matchAll(n) {
+  let any = false;
+  for (const kind of ["stocks", "bonds"]) for (const a of (n.market && n.market[kind]) || []) {
+    if (!canMatch(a)) continue;
+    const buys = a.orders.filter((o) => o.side === "buy").sort((x, y) => y.price - x.price || (x.ts || 0) - (y.ts || 0));
+    const sells = a.orders.filter((o) => o.side === "sell").sort((x, y) => x.price - y.price || (x.ts || 0) - (y.ts || 0));
+    for (const b of buys) for (const s of sells) {
+      if (b.qty <= 0) break;
+      if (s.qty <= 0 || s.sid === b.sid) continue;
+      if (Number(s.price) > Number(b.price)) break;
+      const price = (s.ts || 0) <= (b.ts || 0) ? Number(s.price) : Number(b.price);
+      let q = Math.min(b.qty, s.qty);
+      if (cashUser(b.sid)) q = Math.min(q, Math.floor(balOf(n, b.sid) / price));
+      if (s.sid !== "gov") q = Math.min(q, Number((((n.holdings || {})[s.sid] || {})[a.id] || {}).qty) || 0);
+      if (q <= 0) continue;
+      srvTrade(n, a, kind, b.sid, s.sid, q, price);
+      b.qty -= q;
+      s.qty -= q;
+      any = true;
+    }
+    a.orders = a.orders.filter((o) => o.qty > 0);
+  }
+  return any;
+}
 
 /* ===== 공통 ===== */
 const CORS = {
@@ -656,6 +746,19 @@ export class Classroom extends DurableObject {
       ws.close(4001, "logout");
     } catch (e) {}
   }
+  autoMatch() {
+    const d = this.data;
+    if (!d || !d.market) return;
+    if (!["stocks", "bonds"].some((k) => (d.market[k] || []).some(canMatch))) return;
+    const before = clone(d);
+    if (!matchAll(d)) return;
+    const ops = diffState(before, d);
+    if (!ops.length) return;
+    const inv = applyOps(clone(before), ops);
+    this.save();
+    const seq = this.bump("자동 체결", "겹친 주문 체결", ops, inv);
+    this.broadcastOps(seq, ops, "");
+  }
   broadcastOps(seq, ops, from) {
     for (const ws of this.ctx.getWebSockets("teacher")) this.send(ws, { type: "ops", seq, ops, from });
     for (const ws of this.ctx.getWebSockets("student")) this.send(ws, { type: "refresh", seq });
@@ -746,6 +849,7 @@ export class Classroom extends DurableObject {
     const teacher = me.role === "teacher";
 
     if (key === "state") {
+      this.autoMatch();
       return J({ data: this.viewFor(me), seq: this.seq(), me: { role: me.role, sid: me.sid || null }, label: `${meta.school} ${meta.cls}`, lesson: teacher ? this.lesson() : { open: true } });
     }
     if (key === "ops") {
@@ -762,7 +866,8 @@ export class Classroom extends DurableObject {
       this.save();
       const seq = this.bump(this.actorName(me), summarize(ops), ops, inv);
       this.broadcastOps(seq, ops, String(b.client || ""));
-      return J({ seq });
+      this.autoMatch();
+      return J({ seq: this.seq() });
     }
 
     if (!teacher) return E(403, "선생님만 할 수 있습니다.");

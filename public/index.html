@@ -4692,6 +4692,9 @@ ${names}
         if (qty * price > bal) return notice(`통장 잔액이 부족합니다.
 필요 금액 ${won(qty * price)} FREE · 현재 잔액 ${won(bal)} FREE`);
       }
+      const mineOpp = (a.orders || []).find((o) => o.sid === sid && o.side !== ord.side && (ord.side === "buy" ? o.price <= price : o.price >= price));
+      if (mineOpp) return notice(`내 ${mineOpp.side === "sell" ? "매도" : "매수"} 주문(${won(mineOpp.price)})과 가격이 겹칩니다.
+자기 주문끼리는 체결되지 않으니, 아래 미체결 호가에서 그 주문을 먼저 취소해 주세요.`);
       if (ord.side === "sell") {
         const have = holdingOf(data, sid, a.id).qty;
         const listed = (a.orders || []).filter((o) => o.side === "sell" && o.sid === sid).reduce((s, o) => s + o.qty, 0);
