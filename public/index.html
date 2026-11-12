@@ -2087,18 +2087,39 @@ body{margin:0;}
       return "x" + h;
     }
   };
-  const readRole = () => {
+  /* 로그인 보관: 모니터나 브라우저를 껐다 켜도 하루(24시간) 동안 유지 */
+  const KEEP_MS = 24 * 60 * 60 * 1000;
+  const keepGet = (k) => {
     try {
-      return JSON.parse(sessionStorage.getItem("ce-role") || "null");
+      const v = JSON.parse(localStorage.getItem("keep:" + k) || "null");
+      if (!v || Date.now() - (v.at || 0) > KEEP_MS) {
+        localStorage.removeItem("keep:" + k);
+        return null;
+      }
+      return v.val;
     } catch (e) {
       return null;
     }
+  };
+  const keepSet = (k, val) => {
+    try {
+      if (val == null) localStorage.removeItem("keep:" + k);
+      else localStorage.setItem("keep:" + k, JSON.stringify({ at: Date.now(), val }));
+    } catch (e) {}
+  };
+  const readRole = () => {
+    try {
+      const r = JSON.parse(sessionStorage.getItem("ce-role") || "null");
+      if (r) return r;
+    } catch (e) {}
+    return keepGet("ce-role");
   };
   const writeRole = (r) => {
     try {
       if (r) sessionStorage.setItem("ce-role", JSON.stringify(r));
       else sessionStorage.removeItem("ce-role");
     } catch (e) {}
+    keepSet("ce-role", r || null);
   };
   const sealDate = () => {
     const d = new Date();
@@ -5507,16 +5528,17 @@ ${lines}
   });
   const readClassMode = () => {
     try {
-      return sessionStorage.getItem("ce-class");
-    } catch (e) {
-      return null;
-    }
+      const v = sessionStorage.getItem("ce-class");
+      if (v) return v;
+    } catch (e) {}
+    return keepGet("ce-class");
   };
   const writeClassMode = (id) => {
     try {
       if (id) sessionStorage.setItem("ce-class", id);
       else sessionStorage.removeItem("ce-class");
     } catch (e) {}
+    keepSet("ce-class", id || null);
   };
   function Root() {
     const [cls, setCls] = useState(null);
@@ -5851,6 +5873,12 @@ ${lines}
       const st = JSON.parse(localStorage.getItem("ce-remote-st") || "null");
       if (st && st.role === "student" && st.token) return st;
     } catch (e) {}
+    // 선생님은 하루 동안 이 기기에 로그인이 남는다
+    const t = keepGet("ce-remote");
+    if (t && t.token) {
+      try { sessionStorage.setItem("ce-remote", JSON.stringify(t)); } catch (e) {}
+      return t;
+    }
     return null;
   };
   const writeSess = (s) => {
@@ -5862,6 +5890,7 @@ ${lines}
       if (s && s.role === "student") localStorage.setItem("ce-remote-st", JSON.stringify(s));
       else localStorage.removeItem("ce-remote-st");
     } catch (e) {}
+    keepSet("ce-remote", s && s.role === "teacher" ? s : null);
   };
   const fmtTime = (ts) => {
     const d = new Date(ts);

@@ -532,7 +532,7 @@ export class Classroom extends DurableObject {
   teacherToken() {
     const tok = rand(24);
     this.sql.exec(`DELETE FROM sess WHERE exp<? AND role<>'student'`, now());
-    this.sql.exec(`INSERT INTO sess (tok,role,sid,exp) VALUES (?,?,?,?)`, tok, "teacher", "", now() + 12 * 60 * MIN);
+    this.sql.exec(`INSERT INTO sess (tok,role,sid,exp) VALUES (?,?,?,?)`, tok, "teacher", "", now() + 24 * 60 * MIN);
     return tok;
   }
   /* 학생이 처음 들어올 때 비밀번호 정하기 */
@@ -574,6 +574,8 @@ export class Classroom extends DurableObject {
     const r = this.sql.exec(`SELECT * FROM sess WHERE tok=?`, t).toArray()[0];
     if (!r) return null;
     if (r.role !== "student" && r.exp < now()) return null;
+    // 선생님 로그인은 마지막으로 쓴 때부터 하루 동안 유지
+    if (r.role === "teacher" && r.exp - now() < 23 * 60 * MIN) this.sql.exec(`UPDATE sess SET exp=? WHERE tok=?`, now() + 24 * 60 * MIN, t);
     if (r.role === "student") {
       const l = this.lesson();
       if (!l.open || l.code !== r.lesson) return null;
@@ -831,7 +833,7 @@ export class Classroom extends DurableObject {
         this.kv("teacher", { ...t, f: 0, until: 0 });
       }
       const tok = rand(24);
-      this.sql.exec(`INSERT INTO sess (tok,role,sid,exp) VALUES (?,?,?,?)`, tok, "teacher", "", now() + 12 * 60 * MIN);
+      this.sql.exec(`INSERT INTO sess (tok,role,sid,exp) VALUES (?,?,?,?)`, tok, "teacher", "", now() + 24 * 60 * MIN);
       try {
         await reg(this.env).touch(meta.id);
       } catch (e) {}
