@@ -1716,7 +1716,7 @@ body{margin:0;}
 .ce .px-after span{font-size:12px;}
 @media print{.ce .pr-jobs{grid-template-columns:1fr 1fr!important;gap:8px!important;}.ce .pr-job{break-inside:avoid;page-break-inside:avoid;}}
 /* ---------- 캐릭터 · 상점 ---------- */
-.ce .av{position:relative;display:block;height:100%;aspect-ratio:320/440;margin:0 auto;padding:0;border:0;background:none;}
+.ce .av{position:relative;display:block;height:100%;aspect-ratio:560/760;margin:0 auto;padding:0;border:0;background:none;}
 .ce .av img{position:absolute;max-width:none;pointer-events:none;user-select:none;}
 .ce .av-btn{cursor:pointer;transition:transform .15s;}
 .ce .av-btn:hover{transform:translateY(-3px) scale(1.03);}
@@ -1757,6 +1757,9 @@ body{margin:0;}
 .ce .shop-img{display:grid;place-items:center;height:96px;background:linear-gradient(180deg,#F6F7FB,#ECEFF6);border-radius:6px;overflow:hidden;}
 .ce .shop-img img{max-width:88%;max-height:88px;object-fit:contain;}
 .ce .shop-img.face img{max-height:80px;}
+.ce .shop-grid.sets .shop-img{height:112px;}
+.ce .shop-grid.sets .shop-img img{max-height:104px;}
+.ce .shop-note{margin:6px 0 0;font-size:12px;}
 .ce .shop-img.none{color:var(--mut);font-weight:800;}
 .ce .shop-it b{font-size:14.5px;font-weight:800;line-height:1.3;}
 .ce .shop-desc{font-size:12.5px;color:var(--mut);line-height:1.45;min-height:2.9em;}
@@ -3065,12 +3068,8 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
     ), React.createElement("button", { className: "btn pri sm", style: { marginTop: 7 }, disabled: !text.trim(), onClick: () => load(text, "붙여넣은") }, "이 자료 불러오기")), found && found.length > 0 && React.createElement("div", { className: "mover-found" }, React.createElement("div", { className: "mover-t", style: { marginBottom: 6 } }, "이 기기에서 찾은 저장본"), found.map((h) => React.createElement("div", { className: "mover-hit", key: (h.shared ? "s" : "p") + h.k }, React.createElement("b", null, h.k), React.createElement("span", null, "학생 ", h.n, "명 · 거래 ", h.tx, "건"), React.createElement("button", { className: "btn sm pri", onClick: () => load(h.raw, `'${h.k}'`) }, "불러오기")))), msg && React.createElement("div", { className: "mover-msg" }, msg));
   }
   /* ---------- 캐릭터 꾸미기 · 상점 ---------- */
-  const AV = {"items":[{"id":"face_b0","name":"활짝 웃는 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":31.8,"T":25.31,"W":39.53,"H":24.83},{"id":"face_g0","name":"활짝 웃는 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":32.16,"T":25.57,"W":38.81,"H":24.31},{"id":"face_b1","name":"눈웃음","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.7,"T":25.97,"W":37.73,"H":23.52},{"id":"face_g1","name":"눈웃음","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":31.8,"T":25.57,"W":39.53,"H":24.31},{"id":"face_b2","name":"싱글벙글","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.7,"T":25.97,"W":37.73,"H":23.52},{"id":"face_g2","name":"싱글벙글","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":31.98,"T":25.57,"W":39.17,"H":24.31},{"id":"face_b3","name":"깜짝 놀란 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.88,"T":25.97,"W":37.38,"H":23.52},{"id":"face_g3","name":"깜짝 놀란 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":32.16,"T":25.57,"W":38.81,"H":24.31},{"id":"face_b4","name":"차분한 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.88,"T":25.97,"W":37.38,"H":23.52},{"id":"face_g4","name":"차분한 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":31.98,"T":25.57,"W":39.17,"H":24.31},{"id":"face_b5","name":"행복한 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.88,"T":25.97,"W":37.38,"H":23.52},{"id":"face_g5","name":"행복한 얼굴","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":31.62,"T":25.57,"W":39.89,"H":24.31},{"id":"face_b6","name":"감동의 눈물","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.52,"T":25.97,"W":38.09,"H":23.52},{"id":"face_g6","name":"감동의 눈물","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":31.62,"T":25.57,"W":39.89,"H":24.31},{"id":"face_b7","name":"반짝반짝 눈","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"b","slot":"face","back":0,"L":32.7,"T":25.97,"W":37.73,"H":23.52},{"id":"face_g7","name":"반짝반짝 눈","desc":"표정은 언제든 무료로 바꿀 수 있어요.","price":0,"g":"g","slot":"face","back":0,"L":31.8,"T":25.57,"W":39.53,"H":24.31},{"id":"hair_b0","name":"갈색 곱슬머리","desc":"처음부터 가진 머리예요.","price":0,"g":"b","slot":"hair","back":0,"L":27.84,"T":16.14,"W":47.44,"H":26.4},{"id":"hair_b1","name":"금발 곱슬머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"b","slot":"hair","back":0,"L":28.38,"T":16.14,"W":46.36,"H":25.61},{"id":"hair_b2","name":"흑청 투톤 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"b","slot":"hair","back":0,"L":26.41,"T":16.14,"W":50.31,"H":26.66},{"id":"hair_b3","name":"은발 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"b","slot":"hair","back":0,"L":27.3,"T":16.14,"W":48.52,"H":25.87},{"id":"hair_b4","name":"붉은 갈색 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"b","slot":"hair","back":0,"L":27.84,"T":16.14,"W":47.44,"H":25.87},{"id":"hair_b5","name":"파란 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"b","slot":"hair","back":0,"L":27.3,"T":16.14,"W":48.52,"H":25.87},{"id":"hair_b6","name":"보라 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"b","slot":"hair","back":0,"L":26.41,"T":16.14,"W":50.31,"H":26.14},{"id":"hair_g0","name":"갈색 웨이브 머리","desc":"처음부터 가진 머리예요.","price":0,"g":"g","slot":"hair","back":0,"L":27.13,"T":16.14,"W":48.87,"H":33.45},{"id":"hair_g1","name":"금발 땋은 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"g","slot":"hair","back":0,"L":27.84,"T":16.14,"W":47.44,"H":33.19},{"id":"hair_g2","name":"흑발 꽃핀 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"g","slot":"hair","back":0,"L":26.59,"T":16.14,"W":49.95,"H":32.15},{"id":"hair_g3","name":"은발 양갈래 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"g","slot":"hair","back":0,"L":27.3,"T":16.14,"W":48.52,"H":32.15},{"id":"hair_g4","name":"적갈색 똥머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"g","slot":"hair","back":0,"L":26.59,"T":16.14,"W":49.95,"H":31.1},{"id":"hair_g5","name":"파란 양갈래 머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"g","slot":"hair","back":0,"L":26.41,"T":16.14,"W":50.31,"H":31.36},{"id":"hair_g6","name":"보라 똥머리","desc":"새로운 머리 모양으로 바꿔요.","price":80,"g":"g","slot":"hair","back":0,"L":28.2,"T":16.14,"W":46.72,"H":31.62},{"id":"out_b_blazer","name":"교복 블레이저","desc":"단정한 남색 교복 재킷과 반바지","price":300,"g":"b","slot":"outfit","back":0,"L":29.12,"T":45.91,"W":45.5,"H":34.62},{"id":"out_b_vest","name":"니트 조끼 교복","desc":"포근한 니트 조끼와 넥타이","price":250,"g":"b","slot":"outfit","back":0,"L":30.87,"T":45.91,"W":42.0,"H":34.11},{"id":"out_b_hoodie","name":"헤드폰 후드티","desc":"별 무늬 후드티에 헤드폰까지","price":350,"g":"b","slot":"outfit","back":0,"L":30.17,"T":45.91,"W":43.4,"H":34.36},{"id":"out_b_wizard","name":"마법사 로브","desc":"금빛 무늬가 들어간 마법사 망토","price":600,"g":"b","slot":"outfit","back":0,"L":27.38,"T":45.91,"W":49.0,"H":35.38},{"id":"out_b_labcoat","name":"실험 가운","desc":"꼬마 과학자의 하얀 가운","price":300,"g":"b","slot":"outfit","back":0,"L":30.87,"T":45.91,"W":42.0,"H":34.87},{"id":"out_b_soccer","name":"축구 유니폼","desc":"등번호 10번 축구 선수 옷","price":280,"g":"b","slot":"outfit","back":0,"L":30.52,"T":45.91,"W":42.7,"H":34.87},{"id":"out_b_explorer","name":"탐험가 옷","desc":"주머니가 많은 탐험가 조끼","price":400,"g":"b","slot":"outfit","back":0,"L":27.2,"T":45.91,"W":49.35,"H":35.89},{"id":"out_b_winter","name":"겨울 패딩","desc":"털 달린 따뜻한 겨울 옷","price":350,"g":"b","slot":"outfit","back":0,"L":30.35,"T":45.91,"W":43.05,"H":34.87},{"id":"out_b_pumpkin","name":"호박 망토","desc":"할로윈 호박 망토","price":450,"g":"b","slot":"outfit","back":0,"L":28.25,"T":45.91,"W":47.25,"H":35.89},{"id":"out_b_angel","name":"천사 옷","desc":"날개 달린 하얀 천사 옷","price":700,"g":"b","slot":"outfit","back":0,"L":25.45,"T":45.91,"W":52.85,"H":34.87},{"id":"out_g_blazer","name":"교복 블레이저","desc":"리본 달린 교복 재킷과 체크 치마","price":300,"g":"g","slot":"outfit","back":0,"L":32.62,"T":45.91,"W":38.5,"H":31.82},{"id":"out_g_sweater","name":"스웨터 교복","desc":"포근한 스웨터와 체크 치마","price":250,"g":"g","slot":"outfit","back":0,"L":33.67,"T":45.91,"W":36.4,"H":31.05},{"id":"out_g_bluedress","name":"파란 리본 드레스","desc":"파란 리본이 달린 드레스","price":450,"g":"g","slot":"outfit","back":0,"L":31.05,"T":45.91,"W":41.65,"H":31.05},{"id":"out_g_pinkdress","name":"분홍 프릴 드레스","desc":"꽃 장식 분홍 드레스","price":450,"g":"g","slot":"outfit","back":0,"L":31.92,"T":45.91,"W":39.9,"H":31.05},{"id":"out_g_yellowdress","name":"노란 꽃 드레스","desc":"햇살 같은 노란 드레스","price":450,"g":"g","slot":"outfit","back":0,"L":33.5,"T":45.91,"W":36.75,"H":30.29},{"id":"out_g_wizard","name":"마법사 로브","desc":"금빛 무늬가 들어간 마법사 망토","price":600,"g":"g","slot":"outfit","back":0,"L":28.25,"T":45.91,"W":47.25,"H":31.82},{"id":"out_g_labcoat","name":"실험 가운","desc":"꼬마 과학자의 하얀 가운","price":300,"g":"g","slot":"outfit","back":0,"L":34.02,"T":45.91,"W":35.7,"H":30.04},{"id":"out_g_maid","name":"메이드 옷","desc":"앞치마가 달린 메이드 옷","price":400,"g":"g","slot":"outfit","back":0,"L":31.92,"T":45.91,"W":39.9,"H":30.55},{"id":"out_g_winter","name":"겨울 코트","desc":"털 달린 따뜻한 겨울 코트","price":350,"g":"g","slot":"outfit","back":0,"L":32.98,"T":45.91,"W":37.8,"H":30.29},{"id":"out_g_pumpkin","name":"호박 드레스","desc":"할로윈 호박 드레스","price":450,"g":"g","slot":"outfit","back":0,"L":32.27,"T":45.91,"W":39.2,"H":30.29},{"id":"out_g_angel","name":"천사 드레스","desc":"날개 달린 하얀 천사 드레스","price":700,"g":"g","slot":"outfit","back":0,"L":28.43,"T":45.91,"W":46.9,"H":31.05},{"id":"shoe_sneaker_b","name":"파란 운동화","desc":"가볍게 뛰어다니는 운동화","price":100,"g":null,"slot":"shoes","back":0,"L":35.27,"T":77.22,"W":33.2,"H":17.33},{"id":"shoe_boots_b","name":"갈색 워커","desc":"튼튼한 갈색 워커","price":150,"g":null,"slot":"shoes","back":0,"L":39.18,"T":76.93,"W":25.39,"H":17.61},{"id":"shoe_sneaker2","name":"하늘 운동화","desc":"하늘색 줄무늬 운동화","price":100,"g":null,"slot":"shoes","back":0,"L":37.81,"T":78.35,"W":28.12,"H":16.19},{"id":"shoe_fur_b","name":"털 부츠","desc":"겨울에도 따뜻한 털 부츠","price":160,"g":null,"slot":"shoes","back":0,"L":37.62,"T":78.92,"W":28.52,"H":15.62},{"id":"shoe_maryjane","name":"빨간 구두","desc":"반짝이는 빨간 구두","price":120,"g":null,"slot":"shoes","back":0,"L":36.84,"T":77.78,"W":30.08,"H":16.76},{"id":"shoe_boots_g","name":"리본 워커","desc":"끈을 묶는 갈색 워커","price":150,"g":null,"slot":"shoes","back":0,"L":38.01,"T":77.78,"W":27.73,"H":16.76},{"id":"shoe_sneaker_g","name":"하얀 운동화","desc":"파란 끈 운동화","price":100,"g":null,"slot":"shoes","back":0,"L":38.4,"T":78.92,"W":26.95,"H":15.62},{"id":"shoe_fur_g","name":"베이지 털 부츠","desc":"폭신한 베이지 털 부츠","price":160,"g":null,"slot":"shoes","back":0,"L":40.55,"T":78.64,"W":22.66,"H":15.91},{"id":"hat_cap","name":"야구 모자","desc":"별이 그려진 야구 모자","price":120,"g":null,"slot":"hat","back":0,"L":31.46,"T":11.59,"W":40.2,"H":21.14},{"id":"hat_beanie","name":"방울 털모자","desc":"노란 방울 털모자","price":120,"g":null,"slot":"hat","back":0,"L":33.24,"T":4.15,"W":36.64,"H":29.03},{"id":"hat_beret_b","name":"별 베레모","desc":"멋쟁이 화가의 베레모","price":150,"g":null,"slot":"hat","back":0,"L":36.56,"T":8.64,"W":32.5,"H":20.0},{"id":"hat_aviator","name":"비행사 모자","desc":"고글 달린 비행사 모자","price":200,"g":null,"slot":"hat","back":0,"L":32.97,"T":12.78,"W":37.19,"H":25.85},{"id":"hat_wizard","name":"마법사 모자","desc":"별 장식 마법사 모자","price":250,"g":null,"slot":"hat","back":0,"L":31.91,"T":5.14,"W":39.31,"H":23.95},{"id":"hat_crown","name":"왕관","desc":"보석이 박힌 금빛 왕관","price":500,"g":null,"slot":"hat","back":0,"L":39.7,"T":9.18,"W":23.72,"H":16.73},{"id":"acc_headphones","name":"헤드폰","desc":"음악을 듣는 노란 헤드폰","price":220,"g":null,"slot":"hat","back":0,"L":29.77,"T":19.09,"W":43.59,"H":31.19},{"id":"acc_glasses","name":"동그란 안경","desc":"똑똑해 보이는 동그란 안경","price":100,"g":null,"slot":"glasses","back":0,"L":34.69,"T":31.43,"W":33.75,"H":13.5},{"id":"acc_goggles","name":"물안경 고글","desc":"이마에 올린 고글","price":150,"g":null,"slot":"glasses","back":0,"L":34.29,"T":19.69,"W":34.55,"H":14.25},{"id":"acc_beltbag","name":"허리 가방","desc":"허리에 차는 가죽 가방","price":150,"g":null,"slot":"belt","back":0,"L":44.61,"T":64.6,"W":20.78,"H":10.8},{"id":"back_backpack","name":"별 배낭","desc":"별이 그려진 파란 배낭","price":200,"g":null,"slot":"back","back":0,"L":27.96,"T":53.77,"W":24.08,"H":18.82},{"id":"hat_catears_b","name":"고양이 귀 머리띠","desc":"파란 고양이 귀 머리띠","price":150,"g":null,"slot":"hat","back":0,"L":33.52,"T":2.36,"W":36.09,"H":24.0},{"id":"back_angelwings","name":"천사 날개","desc":"등에 다는 하얀 날개","price":500,"g":null,"slot":"back","back":0,"L":24.64,"T":44.91,"W":54.47,"H":22.91},{"id":"back_batwings","name":"박쥐 날개","desc":"등에 다는 보라 박쥐 날개","price":450,"g":null,"slot":"back","back":0,"L":25.95,"T":46.6,"W":51.84,"H":18.61},{"id":"hand_wand","name":"별 요술봉","desc":"반짝이는 별 요술봉","price":300,"g":null,"slot":"hand","back":0,"L":66.16,"T":52.58,"W":17.06,"H":17.42},{"id":"hand_sword","name":"용사의 검","desc":"금빛 손잡이의 검","price":350,"g":null,"slot":"hand","back":0,"L":64.27,"T":50.3,"W":19.59,"H":19.25},{"id":"hand_shield","name":"별 방패","desc":"별이 새겨진 방패","price":300,"g":null,"slot":"hand","back":0,"L":22.27,"T":57.3,"W":18.59,"H":14.49},{"id":"hat_redbow","name":"빨간 리본","desc":"머리에 다는 빨간 리본","price":100,"g":null,"slot":"hat","back":0,"L":56.41,"T":18.49,"W":17.81,"H":9.38},{"id":"hat_bluebow","name":"파란 리본","desc":"머리에 다는 파란 리본","price":100,"g":null,"slot":"hat","back":0,"L":55.59,"T":18.32,"W":19.45,"H":9.72},{"id":"hat_tiara","name":"티아라","desc":"작은 보석 티아라","price":450,"g":null,"slot":"hat","back":0,"L":39.88,"T":13.25,"W":23.38,"H":11.75},{"id":"hat_flowercrown","name":"꽃 화관","desc":"노란 꽃으로 엮은 화관","price":200,"g":null,"slot":"hat","back":0,"L":34.38,"T":16.11,"W":34.38,"H":15.06},{"id":"hat_beret_g","name":"꽃 베레모","desc":"꽃 장식 보라 베레모","price":150,"g":null,"slot":"hat","back":0,"L":34.23,"T":10.39,"W":37.16,"H":17.8},{"id":"hat_sunhat","name":"챙 모자","desc":"리본 달린 하얀 챙 모자","price":180,"g":null,"slot":"hat","back":0,"L":29.81,"T":14.6,"W":43.5,"H":18.12},{"id":"hat_strawhat","name":"밀짚모자","desc":"꽃 달린 밀짚모자","price":160,"g":null,"slot":"hat","back":0,"L":31.17,"T":14.27,"W":40.78,"H":18.45},{"id":"hat_catears_g","name":"고양이 귀","desc":"갈색 고양이 귀 머리띠","price":150,"g":null,"slot":"hat","back":0,"L":35.06,"T":6.86,"W":33.0,"H":19.5},{"id":"hat_bunnyears","name":"토끼 귀","desc":"하얀 토끼 귀 머리띠","price":150,"g":null,"slot":"hat","back":0,"L":36.73,"T":11.16,"W":29.66,"H":15.66},{"id":"hat_halo","name":"천사 고리","desc":"머리 위에 뜨는 금빛 고리","price":400,"g":null,"slot":"hat","back":0,"L":36.83,"T":9.84,"W":29.47,"H":9.41},{"id":"acc_necklace","name":"보석 목걸이","desc":"파란 보석 목걸이","price":250,"g":null,"slot":"neck","back":0,"L":43.12,"T":46.82,"W":17.5,"H":10.18},{"id":"hand_bag","name":"리본 가방","desc":"분홍 리본 손가방","price":220,"g":null,"slot":"hand","back":0,"L":64.91,"T":63.18,"W":17.05,"H":10.15},{"id":"hand_book","name":"마법책","desc":"별이 그려진 두꺼운 책","price":150,"g":null,"slot":"hand","back":0,"L":64.09,"T":62.45,"W":17.44,"H":8.74},{"id":"hand_potion","name":"물약","desc":"보라색 신비한 물약","price":250,"g":null,"slot":"hand","back":0,"L":66.55,"T":58.28,"W":13.78,"H":11.61},{"id":"hand_lantern","name":"등불","desc":"따뜻하게 빛나는 등불","price":200,"g":null,"slot":"hand","back":0,"L":67.99,"T":62.73,"W":12.15,"H":12.11},{"id":"hand_bouquet","name":"꽃다발","desc":"분홍 꽃다발","price":180,"g":null,"slot":"hand","back":0,"L":62.18,"T":59.38,"W":20.01,"H":11.25},{"id":"pet_bunny","name":"토끼 친구","desc":"옆에서 함께하는 하얀 토끼","price":400,"g":null,"slot":"pet","back":0,"L":7.67,"T":79.0,"W":18.41,"H":15.55},{"id":"pet_bear","name":"곰 인형 친구","desc":"옆에서 함께하는 곰돌이","price":400,"g":null,"slot":"pet","back":0,"L":4.52,"T":77.92,"W":23.45,"H":16.62},{"id":"pet_cat","name":"고양이 친구","desc":"옆에서 함께하는 하얀 고양이","price":400,"g":null,"slot":"pet","back":0,"L":1.34,"T":79.65,"W":27.31,"H":14.9},{"id":"fx_sparkle","name":"반짝이","desc":"머리 위로 반짝이는 별빛","price":200,"g":null,"slot":"fx","back":0,"L":68.11,"T":22.3,"W":25.03,"H":12.68},{"id":"fx_stars","name":"별가루","desc":"몸 주위의 별가루","price":200,"g":null,"slot":"fx","back":0,"L":11.88,"T":29.64,"W":25.0,"H":11.64},{"id":"fx_water","name":"물의 기운","desc":"파랗게 휘도는 물 효과","price":500,"g":null,"slot":"fx","back":1,"L":66.47,"T":49.26,"W":30.19,"H":28.75},{"id":"fx_fire","name":"불의 기운","desc":"활활 타오르는 불 효과","price":500,"g":null,"slot":"fx","back":1,"L":67.22,"T":51.52,"W":26.81,"H":24.23},{"id":"fx_magic","name":"마법의 기운","desc":"보랏빛 마법 효과","price":500,"g":null,"slot":"fx","back":1,"L":67.93,"T":47.16,"W":25.39,"H":32.95}],"body":{"L":20.62,"T":45.45,"W":58.75,"H":49.09}};
-  const AV_BY = Object.fromEntries(AV.items.map((x) => [x.id, x]));
-  const AV_ORDER = ["fxback", "back", "pet", "body", "shoes", "outfit", "neck", "belt", "face", "hair", "glasses", "hat", "hand", "fx"];
-  const AV_CATS = [["all", "전체"], ["outfit", "옷"], ["hair", "머리"], ["shoes", "신발"], ["hat", "모자·머리띠"], ["glasses", "안경"], ["neck", "목걸이"], ["belt", "허리"], ["back", "등"], ["hand", "손"], ["pet", "친구"], ["fx", "효과"]];
-  const AV_SLOT = { face: "표정", hair: "머리", outfit: "옷", shoes: "신발", hat: "모자·머리띠", glasses: "안경", neck: "목걸이", belt: "허리", back: "등", hand: "손", pet: "친구", fx: "효과" };
-  const avSrc = (id) => "av/" + id + ".webp";
+  const AV = {"cw":560,"ch":760,"base":{"b":[18.65,6.98,62.7,91.71],"g":[15.27,5.59,69.46,93.09]},"sets":[{"id":"set01","name":"마법사 세트","desc":"마법사 모자 · 마법사 망토 · 마법 지팡이","price":800,"b":[12.51,29.09,74.97,69.59]},{"id":"set02","name":"왕관 세트","desc":"왕관 · 왕의 망토 · 왕의 홀","price":1000,"b":[13.61,27.58,72.77,71.1]},{"id":"set03","name":"탐험가 세트","desc":"탐험가 모자 · 탐험 배낭 · 나침반 · 탐험 랜턴","price":700,"b":[13.83,31.68,72.34,67.0]},{"id":"set04","name":"과학자 세트","desc":"실험 고글 · 실험 가운 · 실험 플라스크 · 실험 기록판","price":600,"b":[16.03,30.17,67.94,68.51]},{"id":"set05","name":"기사 세트","desc":"기사 투구 · 기사 방패 · 기사의 검","price":900,"b":[11.78,28.23,76.44,70.46]},{"id":"set06","name":"요리사 세트","desc":"요리사 모자 · 요리사 옷 · 뒤집개 · 프라이팬","price":500,"b":[19.1,30.82,61.79,67.87]},{"id":"set07","name":"운동선수 세트","desc":"축구공 · 축구 유니폼 · 축구화 · 축구 반바지","price":500,"b":[20.35,33.41,59.3,65.28]},{"id":"set08","name":"아이돌 세트","desc":"마이크 · 아이돌 헤드셋 · 무대 재킷","price":800,"b":[18.22,30.49,63.55,68.19]},{"id":"set09","name":"해적 세트","desc":"해적 모자 · 해적 칼 · 보물 상자","price":800,"b":[15.81,32.11,68.38,66.57]},{"id":"set10","name":"닌자 세트","desc":"닌자 머리띠 · 쿠나이 · 표창","price":700,"b":[14.2,33.84,71.6,64.84]},{"id":"set11","name":"우주비행사 세트","desc":"우주 헬멧 · 우주복 · 산소통 가방","price":900,"b":[17.42,34.7,65.16,63.98]},{"id":"set12","name":"용 세트","desc":"용의 뿔 · 용의 날개 · 용의 꼬리","price":1000,"b":[14.71,31.79,70.58,66.89]},{"id":"set13","name":"천사 세트","desc":"천사 고리 · 천사 날개 · 천사 옷","price":1000,"b":[10.98,32.01,78.05,66.68]},{"id":"set14","name":"악마 세트","desc":"악마 뿔 · 악마 날개 · 악마 꼬리","price":1000,"b":[14.13,31.79,71.75,66.89]},{"id":"set15","name":"숲의 요정 세트","desc":"숲의 화관 · 요정 날개","price":900,"b":[12.51,32.01,74.97,66.68]},{"id":"set16","name":"학자 세트","desc":"동그란 안경 · 두꺼운 책 · 깃털 펜","price":600,"b":[15.37,30.82,69.26,67.87]},{"id":"set17","name":"겨울 코트 세트","desc":"털 모자 · 겨울 코트 · 털 장갑","price":600,"b":[16.76,30.93,66.48,67.76]},{"id":"set18","name":"여름 바캉스 세트","desc":"선글라스 · 꽃무늬 셔츠 · 오리 튜브","price":600,"b":[13.47,32.11,73.07,66.57]},{"id":"set19","name":"동물 후드 세트","desc":"고양이 후드 · 고양이 발 장갑 · 고양이 꼬리","price":700,"b":[19.84,33.19,60.33,65.49]},{"id":"set20","name":"게임 히어로 세트","desc":"게임 헤드셋 · 영웅 엠블럼 · 마법 수정","price":1000,"b":[12.59,31.68,74.83,67.0]}]};
+  const AV_BY = Object.fromEntries(AV.sets.map((x) => [x.id, x]));
   const avG = (data, sid) => {
     const a = (data.avatars || {})[sid];
     if (a && (a.g === "b" || a.g === "g")) return a.g;
@@ -3082,160 +3081,133 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
     return p != null && p !== "" && !isNaN(Number(p)) ? Math.max(0, Math.round(Number(p))) : (AV_BY[id] || {}).price || 0;
   };
   const avOn = (data, id) => !((data.shop || {}).off || {})[id];
-  const avFits = (it, g) => !it.g || it.g === g;
-  const avDefault = (g) => ({ face: "face_" + g + "0", hair: "hair_" + g + "0" });
   const avState = (data, sid) => {
     const a = (data.avatars || {})[sid] || {};
-    const g = avG(data, sid);
-    const wear = { ...avDefault(g), ...(a.wear || {}) };
-    Object.keys(wear).forEach((k) => { const it = AV_BY[wear[k]]; if (!it || !avFits(it, g)) delete wear[k]; });
-    return { g, own: a.own || [], wear: { ...avDefault(g), ...wear } };
+    const set = (a.wear || {}).set;
+    return { g: avG(data, sid), own: a.own || [], set: AV_BY[set] ? set : null };
   };
   const avHas = (data, st, id) => st.own.includes(id) || avPrice(data, id) === 0;
-  const avPos = (b) => ({ left: b.L + "%", top: b.T + "%", width: b.W + "%", height: b.H + "%" });
-  function Avatar({ wear, onClick, title, className }) {
-    const by = {};
-    Object.values(wear || {}).forEach((id) => { const it = AV_BY[id]; if (it) by[it.slot === "fx" && it.back ? "fxback" : it.slot] = it; });
+  const avPos = (b) => ({ left: b[0] + "%", top: b[1] + "%", width: b[2] + "%", height: b[3] + "%" });
+  const avImg = (g, set) => {
+    const s = set && AV_BY[set];
+    if (s) { const v = g === "g" && s.g ? "g" : "b"; return { src: "av/" + s.id + "_" + v + ".webp", pos: s[v] }; }
+    return { src: "av/base_" + g + ".webp", pos: AV.base[g] || AV.base.b };
+  };
+  function Avatar({ g, set, onClick, title, className }) {
+    const im = avImg(g === "g" ? "g" : "b", set);
     return E(onClick ? "button" : "div", { className: "av" + (onClick ? " av-btn" : "") + (className ? " " + className : ""), onClick, title, type: onClick ? "button" : undefined, "aria-label": title || "캐릭터" },
-      AV_ORDER.map((sl) => sl === "body"
-        ? E("img", { key: "body", src: avSrc("body"), alt: "", draggable: false, style: avPos(AV.body) })
-        : by[sl] ? E("img", { key: sl, src: avSrc(by[sl].id), alt: "", draggable: false, style: avPos(by[sl]) }) : null));
+      E("img", { key: im.src, src: im.src, alt: "", draggable: false, style: avPos(im.pos) }));
   }
   const avBal = (data, sid) => (data.tx || []).filter((t) => t.sid === sid).reduce((x, t) => x + (t.type === "in" ? t.amount : -t.amount), 0);
-  const avBuy = (update, sid, ids, g, wear) => update((n) => {
+  const avSave = (update, sid, g, set, buyId) => update((n) => {
     if (!n.avatars) n.avatars = {};
     const a = n.avatars[sid] || (n.avatars[sid] = {});
-    const total = ids.reduce((x, id) => x + avPrice(n, id), 0);
     a.g = g;
-    a.own = Array.from(new Set([...(a.own || []), ...ids]));
-    a.wear = { ...wear };
+    if (!a.own) a.own = [];
+    a.wear = set ? { set } : {};
+    if (!buyId) return;
+    if (!a.own.includes(buyId)) a.own = a.own.concat([buyId]);
+    const total = avPrice(n, buyId);
     if (total > 0) {
-      const names = ids.map((id) => AV_BY[id].name).join(", ");
+      const nm = AV_BY[buyId].name;
       const date = toKey(new Date());
-      n.tx.push({ id: uid(), sid, date, type: "out", amount: total, memo: ("상점 · " + names).slice(0, 80), seq: Date.now() });
+      n.tx.push({ id: uid(), sid, date, type: "out", amount: total, memo: "상점 · " + nm, seq: Date.now() });
       if (!n.treasury) n.treasury = [];
-      n.treasury.push({ id: uid(), date, label: ("상점 판매 · " + names).slice(0, 80), kind: "in", amount: total, auto: true });
+      n.treasury.push({ id: uid(), date, label: "상점 판매 · " + nm, kind: "in", amount: total, auto: true });
     }
   });
+  const avGirlNote = (g, set) => g === "g" && set && AV_BY[set] && !AV_BY[set].g ? E("p", { className: "hint shop-note" }, "여학생 세트 그림은 준비 중이라 지금은 같은 그림으로 보여요.") : null;
   function ShopModal({ data, update, sid, canBuy, onClose, onDress }) {
-    const st0 = avState(data, sid);
-    const [g] = useState(st0.g);
-    const [wear, setWear] = useState(st0.wear);
-    const [cat, setCat] = useState("all");
+    const st = avState(data, sid);
+    const [tryId, setTry] = useState(st.set);
     const [msg, setMsg] = useState("");
     const name = (data.students.find((x) => x.id === sid) || {}).name || "";
     const bal = avBal(data, sid);
-    const st = avState(data, sid);
-    const list = AV.items.filter((it) => it.slot !== "face" && avFits(it, g) && avOn(data, it.id) && avPrice(data, it.id) > 0 && (cat === "all" || it.slot === cat));
-    const trying = Object.values(wear).filter((id) => AV_BY[id] && !avHas(data, st, id));
-    const total = trying.reduce((x, id) => x + avPrice(data, id), 0);
-    const toggle = (it) => {
-      setMsg("");
-      setWear((w) => {
-        const nw = { ...w };
-        if (nw[it.slot] === it.id) {
-          if (st.wear[it.slot] && st.wear[it.slot] !== it.id) nw[it.slot] = st.wear[it.slot];
-          else if (it.slot === "hair") nw.hair = avDefault(g).hair;
-          else delete nw[it.slot];
-        } else nw[it.slot] = it.id;
-        return nw;
-      });
+    const list = AV.sets.filter((it) => avOn(data, it.id) || st.own.includes(it.id));
+    const cur = tryId && AV_BY[tryId];
+    const owned = cur && avHas(data, st, cur.id);
+    const price = cur ? avPrice(data, cur.id) : 0;
+    const pick = (id) => { setMsg(""); setTry((t) => (t === id ? st.set : id)); };
+    const act = () => {
+      if (!cur) return;
+      if (owned) { avSave(update, sid, st.g, cur.id); return setMsg(`${cur.name}를 입었어요!`); }
+      if (!avOn(data, cur.id)) return setMsg("지금은 팔지 않는 세트예요.");
+      if (price > bal) return setMsg(`통장 잔액이 ${won(price - bal)} FREE 모자랍니다.`);
+      avSave(update, sid, st.g, cur.id, cur.id);
+      setMsg(`${cur.name}를 사서 입었어요! 통장에서 ${won(price)} FREE가 나갔습니다.`);
     };
-    const buy = () => {
-      if (!trying.length) return;
-      if (total > bal) return setMsg(`통장 잔액이 ${won(total - bal)} FREE 모자랍니다.`);
-      avBuy(update, sid, trying, g, wear);
-      setMsg(`${trying.length}개를 사서 입었어요! 통장에서 ${won(total)} FREE가 나갔습니다.`);
-    };
+    const same = (tryId || null) === (st.set || null);
     return E(Modal, { title: "상점 · 캐릭터 꾸미기", onClose, wide: true },
       E("div", { className: "modal-bd shop" },
         E("div", { className: "shop-pv" },
           E("div", { className: "shop-who" }, E("b", null, name), E("span", { className: "num" }, "통장 ", won(bal), " FREE")),
-          E("div", { className: "av-stage big" }, E(Avatar, { wear })),
-          trying.length > 0
+          E("div", { className: "av-stage big" }, E(Avatar, { g: st.g, set: tryId })),
+          avGirlNote(st.g, tryId),
+          cur && !same
             ? E("div", { className: "shop-cart" },
-                E("em", null, "입어 보는 중"),
-                E("ul", null, trying.map((id) => E("li", { key: id }, AV_BY[id].name, E("span", { className: "num" }, won(avPrice(data, id)))))),
-                E("div", { className: "shop-sum" }, E("span", null, "합계"), E("b", { className: "num" }, won(total), " FREE")))
-            : E("p", { className: "hint" }, "상품을 누르면 캐릭터가 입어 봅니다. 마음에 들면 사서 입으세요."),
+                E("em", null, owned ? "가지고 있는 세트" : "입어 보는 중"),
+                E("ul", null, E("li", null, cur.name, E("span", { className: "num" }, owned ? "-" : won(price)))),
+                !owned && E("div", { className: "shop-sum" }, E("span", null, "가격"), E("b", { className: "num" }, won(price), " FREE")))
+            : E("p", { className: "hint" }, "세트를 누르면 캐릭터가 입어 봅니다. 마음에 들면 사서 입으세요."),
           msg && E("div", { className: "shop-msg", role: "status" }, msg),
           E("div", { className: "shop-acts" },
-            E("button", { className: "btn", onClick: () => { setWear(avState(data, sid).wear); setMsg(""); } }, "원래대로"),
+            E("button", { className: "btn", onClick: () => { setTry(st.set); setMsg(""); } }, "원래대로"),
             canBuy
-              ? E("button", { className: "btn gold", disabled: !trying.length, onClick: buy }, trying.length ? `${won(total)} FREE 사서 입기` : "사서 입기")
+              ? E("button", { className: "btn gold", disabled: !cur || same, onClick: act }, !cur || same ? "사서 입기" : owned ? "이 세트 입기" : `${won(price)} FREE 사서 입기`)
               : E("span", { className: "hint" }, "구경만 할 수 있어요")),
           onDress && E("button", { className: "lnk shop-dress", onClick: onDress }, "내 옷장 열기 →")),
         E("div", { className: "shop-main" },
-          E("div", { className: "shop-cats", role: "tablist" }, AV_CATS.map(([k, label]) => E("button", { key: k, role: "tab", "aria-selected": cat === k, className: "shop-cat" + (cat === k ? " on" : ""), onClick: () => setCat(k) }, label))),
-          E("div", { className: "shop-grid" }, list.length === 0 ? E("div", { className: "empty" }, "이 칸에는 파는 물건이 없습니다.") : list.map((it) => {
+          E("div", { className: "shop-grid sets" }, list.length === 0 ? E("div", { className: "empty" }, "지금 파는 세트가 없습니다.") : list.map((it) => {
             const own = avHas(data, st, it.id);
-            const on = wear[it.slot] === it.id;
-            return E("button", { key: it.id, className: "shop-it" + (on ? " on" : ""), onClick: () => toggle(it) },
-              E("span", { className: "shop-img" }, E("img", { src: avSrc(it.id), alt: "", loading: "lazy" })),
+            const on = tryId === it.id;
+            return E("button", { key: it.id, className: "shop-it" + (on ? " on" : ""), onClick: () => pick(it.id) },
+              E("span", { className: "shop-img" }, E("img", { src: "av/" + it.id + ".webp", alt: "", loading: "lazy" })),
               E("b", null, it.name),
               E("span", { className: "shop-desc" }, it.desc),
-              E("span", { className: "shop-price" }, own ? E("em", { className: "own" }, "가지고 있음") : E(React.Fragment, null, E("strong", { className: "num" }, won(avPrice(data, it.id))), " FREE"), on && E("em", { className: "tryon" }, "입어 보는 중")));
+              E("span", { className: "shop-price" }, own ? E("em", { className: "own" }, st.set === it.id ? "입는 중" : "가지고 있음") : E(React.Fragment, null, E("strong", { className: "num" }, won(avPrice(data, it.id))), " FREE"), on && !own && E("em", { className: "tryon" }, "입어 보는 중")));
           })))));
   }
   function DressModal({ data, update, sid, onClose, onShop }) {
-    const st0 = avState(data, sid);
-    const [g, setG] = useState(st0.g);
-    const [wear, setWear] = useState(st0.wear);
-    const [cat, setCat] = useState("face");
-    const name = (data.students.find((x) => x.id === sid) || {}).name || "";
     const st = avState(data, sid);
-    const switchG = (ng) => {
-      if (ng === g) return;
-      const nw = {};
-      Object.entries(wear).forEach(([k, id]) => { const it = AV_BY[id]; if (it && !it.g) nw[k] = id; });
-      setG(ng);
-      setWear({ ...avDefault(ng), ...nw });
-    };
-    const mine = AV.items.filter((it) => avFits(it, g) && avHas(data, st, it.id) && it.slot === cat);
-    const save = () => {
-      update((n) => {
-        if (!n.avatars) n.avatars = {};
-        const a = n.avatars[sid] || (n.avatars[sid] = {});
-        a.g = g;
-        a.wear = { ...wear };
-        if (!a.own) a.own = [];
-      });
-      onClose();
-    };
-    const cats = [["face", "표정"]].concat(AV_CATS.filter(([k]) => k !== "all"));
+    const [g, setG] = useState(st.g);
+    const [set, setSet] = useState(st.set);
+    const name = (data.students.find((x) => x.id === sid) || {}).name || "";
+    const mine = AV.sets.filter((it) => avHas(data, st, it.id));
+    const save = () => { avSave(update, sid, g, set); onClose(); };
     return E(Modal, { title: `${name} 옷장`, onClose, wide: true },
       E("div", { className: "modal-bd shop" },
         E("div", { className: "shop-pv" },
-          E("div", { className: "shop-who" }, E("b", null, name), E("div", { className: "seg" }, [["b", "남자"], ["g", "여자"]].map(([k, l]) => E("button", { key: k, className: g === k ? "on" : "", onClick: () => switchG(k) }, l)))),
-          E("div", { className: "av-stage big" }, E(Avatar, { wear })),
+          E("div", { className: "shop-who" }, E("b", null, name), E("div", { className: "seg" }, [["b", "남자"], ["g", "여자"]].map(([k, l]) => E("button", { key: k, className: g === k ? "on" : "", onClick: () => setG(k) }, l)))),
+          E("div", { className: "av-stage big" }, E(Avatar, { g, set })),
+          avGirlNote(g, set),
           E("div", { className: "shop-acts" },
             E("button", { className: "btn", onClick: onShop }, "상점 가기"),
             E("button", { className: "btn pri", onClick: save }, "이대로 입기"))),
         E("div", { className: "shop-main" },
-          E("div", { className: "shop-cats", role: "tablist" }, cats.map(([k, label]) => E("button", { key: k, role: "tab", "aria-selected": cat === k, className: "shop-cat" + (cat === k ? " on" : ""), onClick: () => setCat(k) }, label))),
-          E("div", { className: "shop-grid" },
-            cat !== "face" && cat !== "hair" && E("button", { className: "shop-it" + (!wear[cat] ? " on" : ""), onClick: () => setWear((w) => { const nw = { ...w }; delete nw[cat]; return nw; }) }, E("span", { className: "shop-img none" }, "없음"), E("b", null, "벗기"), E("span", { className: "shop-desc" }, AV_SLOT[cat] + " 칸을 비웁니다")),
-            mine.length === 0 && cat !== "face" ? E("div", { className: "empty" }, "아직 가진 물건이 없습니다. 상점에서 사 보세요.") :
-            mine.map((it) => E("button", { key: it.id, className: "shop-it" + (wear[it.slot] === it.id ? " on" : ""), onClick: () => setWear((w) => ({ ...w, [it.slot]: it.id })) },
-              E("span", { className: "shop-img" + (it.slot === "face" ? " face" : "") }, E("img", { src: avSrc(it.id), alt: "", loading: "lazy" })),
+          E("div", { className: "shop-grid sets" },
+            E("button", { className: "shop-it" + (!set ? " on" : ""), onClick: () => setSet(null) },
+              E("span", { className: "shop-img" }, E("img", { src: "av/base_" + g + ".webp", alt: "" })),
+              E("b", null, "기본 옷"), E("span", { className: "shop-desc" }, "처음 입고 있던 하얀 티셔츠")),
+            mine.length === 0 ? E("div", { className: "empty" }, "아직 가진 세트가 없습니다. 상점에서 사 보세요.") :
+            mine.map((it) => E("button", { key: it.id, className: "shop-it" + (set === it.id ? " on" : ""), onClick: () => setSet(it.id) },
+              E("span", { className: "shop-img" }, E("img", { src: "av/" + it.id + ".webp", alt: "", loading: "lazy" })),
               E("b", null, it.name),
-              wear[it.slot] === it.id && E("span", { className: "shop-price" }, E("em", { className: "tryon" }, "입는 중"))))))));
+              set === it.id && E("span", { className: "shop-price" }, E("em", { className: "tryon" }, "입는 중"))))))));
   }
   function ShopAdmin({ data, update }) {
     const [open, setOpen] = useState(false);
     const setP = (id, v) => update((n) => { if (!n.shop) n.shop = {}; if (!n.shop.price) n.shop.price = {}; const x = String(v).replace(/[^0-9]/g, ""); if (x === "") delete n.shop.price[id]; else n.shop.price[id] = Number(x); });
     const setOff = (id, off) => update((n) => { if (!n.shop) n.shop = {}; if (!n.shop.off) n.shop.off = {}; if (off) n.shop.off[id] = true; else delete n.shop.off[id]; });
     const sold = (data.tx || []).filter((t) => t.type === "out" && String(t.memo || "").startsWith("상점 ·")).reduce((x, t) => x + t.amount, 0);
-    const list = AV.items.filter((it) => it.slot !== "face" && it.price > 0);
+    const list = AV.sets;
     return E("section", { className: "card shop-admin" },
-      E("div", { className: "card-hd" }, E("h2", null, "상점 관리"), E("span", { className: "hint" }, "캐릭터 상품 ", list.length, "개 · 지금까지 판매 ", won(sold), " FREE (국세청 수입으로 들어갑니다)"),
+      E("div", { className: "card-hd" }, E("h2", null, "상점 관리"), E("span", { className: "hint" }, "캐릭터 세트 ", list.length, "개 · 지금까지 판매 ", won(sold), " FREE (국세청 수입으로 들어갑니다)"),
         E("button", { className: "btn sm", style: { marginLeft: "auto" }, onClick: () => setOpen((v) => !v) }, open ? "접기" : "가격 정하기")),
       open && E("div", { className: "scroll" }, E("table", { className: "stbl", style: { minWidth: 640 } },
-        E("thead", null, E("tr", null, E("th", { style: { width: 64 } }), E("th", { style: { textAlign: "left" } }, "상품"), E("th", { style: { width: 90 } }, "종류"), E("th", { className: "r", style: { width: 90 } }, "기본 가격"), E("th", { className: "r", style: { width: 130 } }, "판매 가격"), E("th", { style: { width: 70 } }, "판매"))),
+        E("thead", null, E("tr", null, E("th", { style: { width: 64 } }), E("th", { style: { textAlign: "left" } }, "세트"), E("th", { className: "r", style: { width: 90 } }, "기본 가격"), E("th", { className: "r", style: { width: 130 } }, "판매 가격"), E("th", { style: { width: 70 } }, "판매"))),
         E("tbody", null, list.map((it) => E("tr", { key: it.id, className: avOn(data, it.id) ? "" : "off" },
-          E("td", null, E("img", { className: "sa-img", src: avSrc(it.id), alt: "", loading: "lazy" })),
-          E("td", null, E("b", null, it.name), it.g && E("span", { className: "mtag" }, it.g === "b" ? "남" : "여"), E("div", { className: "hint" }, it.desc)),
-          E("td", { style: { textAlign: "center" } }, AV_SLOT[it.slot]),
+          E("td", null, E("img", { className: "sa-img", src: "av/" + it.id + ".webp", alt: "", loading: "lazy" })),
+          E("td", null, E("b", null, it.name), E("div", { className: "hint" }, it.desc)),
           E("td", { className: "r num" }, won(it.price)),
           E("td", { className: "r" }, E("input", { className: "inp mini num", style: { width: 90, textAlign: "right" }, inputMode: "numeric", "aria-label": it.name + " 판매 가격", placeholder: String(it.price), value: ((data.shop || {}).price || {})[it.id] ?? "", onChange: (e) => setP(it.id, e.target.value) })),
           E("td", { style: { textAlign: "center" } }, E("input", { type: "checkbox", "aria-label": it.name + " 판매", checked: avOn(data, it.id), onChange: (e) => setOff(it.id, !e.target.checked) }))))))));
@@ -3293,7 +3265,7 @@ ${k === "stocks" ? "주식 시장의 같은 이름 주식, 회사 뉴스, 할 �
         React.createElement("div", { className: "job" + (job ? "" : " none") }, job ? job.name : "직업 없음"),
         React.createElement("div", { className: "sname" }, React.createElement("span", { className: "gdot", style: { background: s.gender === "여" ? "#C97C99" : "#4E8CBE" } }), s.name || "이름 없음"),
         E("div", { className: "av-stage", style: jobPhotoOf(job) ? { backgroundImage: `url(${jobPhotoOf(job)})` } : null },
-          E(Avatar, { wear: avState(data, s.id).wear, title: canDress(s.id) ? `${s.name} 캐릭터 옷 입히기` : `${s.name} 캐릭터`, onClick: canDress(s.id) ? (e) => { e.stopPropagation(); setDress(s.id); } : undefined })),
+          E(Avatar, { g: avState(data, s.id).g, set: avState(data, s.id).set, title: canDress(s.id) ? `${s.name} 캐릭터 옷 입히기` : `${s.name} 캐릭터`, onClick: canDress(s.id) ? (e) => { e.stopPropagation(); setDress(s.id); } : undefined })),
         React.createElement("div", { className: "amt" }, React.createElement("span", null, "통장"), React.createElement("b", null, won(a.bank))),
         React.createElement("div", { className: "amt" }, React.createElement("span", null, "예금"), React.createElement("b", null, won(a.savings))),
         React.createElement("div", { className: "amt" }, React.createElement("span", null, "금융자산"), React.createElement("b", null, won(a.fin), a.profit !== 0 && React.createElement("em", { style: { fontStyle: "normal", marginLeft: 5, fontSize: 13.5, color: a.profit > 0 ? "#B2453B" : "#2A4699" } }, a.profit > 0 ? "+" : "", won(a.profit)))),
