@@ -1591,7 +1591,7 @@
 .ce .pr-formula{background:var(--hl);border-left:4px solid var(--navy);padding:8px 12px;font-weight:700;font-size:13.5px;margin-bottom:8px;color:#0E2A55;}
 .ce .pr-foot{display:flex;justify-content:space-between;margin-top:22px;padding-top:7px;border-top:1px solid var(--line);font-size:10.5px;color:var(--mut);}
 
-@media(max-width:760px){
+@media screen and (max-width:760px){
   .ce .gate-grid{grid-template-columns:minmax(0,1fr);}
   .ce .pstrip-h{display:none;}
   .ce .pr-sheet{padding:18px 14px;}
@@ -1714,6 +1714,7 @@ body{margin:0;}
 .ce .conn-wait{margin-left:6px;font-size:11.5px;font-weight:800;color:#B2453B;}
 .ce .px-after{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
 .ce .px-after span{font-size:12px;}
+@media print{.ce .pr-jobs{grid-template-columns:1fr 1fr!important;gap:8px!important;}.ce .pr-job{break-inside:avoid;page-break-inside:avoid;}}
 .ce .pm.trade{background:#EEF6F1;color:#15795E;border-color:#A9D3BD;}
 .ce main.ro .trade-ok :is(input:not([type=range]):not([type=checkbox]),select,textarea){pointer-events:auto;background:#fff!important;color:var(--txt);}
 .ce main.ro :not(.modal-hd) > .xbtn.mine{visibility:visible;}
@@ -5840,17 +5841,26 @@ ${lines}
       return { ok: false, network: true, error: "인터넷 연결을 확인해 주세요." };
     }
   };
+  // 학생 로그인은 패드에 남겨 두어, 화면을 껐다 켜거나 앱을 다시 열어도 수업이 끝날 때까지 유지된다
   const readSess = () => {
     try {
-      return JSON.parse(sessionStorage.getItem("ce-remote") || "null");
-    } catch (e) {
-      return null;
-    }
+      const t = JSON.parse(sessionStorage.getItem("ce-remote") || "null");
+      if (t) return t;
+    } catch (e) {}
+    try {
+      const st = JSON.parse(localStorage.getItem("ce-remote-st") || "null");
+      if (st && st.role === "student" && st.token) return st;
+    } catch (e) {}
+    return null;
   };
   const writeSess = (s) => {
     try {
       if (s) sessionStorage.setItem("ce-remote", JSON.stringify(s));
       else sessionStorage.removeItem("ce-remote");
+    } catch (e) {}
+    try {
+      if (s && s.role === "student") localStorage.setItem("ce-remote-st", JSON.stringify(s));
+      else localStorage.removeItem("ce-remote-st");
     } catch (e) {}
   };
   const fmtTime = (ts) => {

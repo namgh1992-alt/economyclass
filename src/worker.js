@@ -194,6 +194,10 @@ export class Registry extends DurableObject {
   async dropCode(cid) {
     this.sql.exec(`DELETE FROM codes WHERE cid=?`, cid);
   }
+  async extendCode(cid, code, exp) {
+    this.sql.exec(`INSERT OR REPLACE INTO codes (code,cid,exp) VALUES (?,?,?)`, String(code), cid, exp);
+    return true;
+  }
   async touch(cid) {
     this.sql.exec(`UPDATE classes SET last=? WHERE id=?`, now(), cid);
   }
@@ -460,7 +464,7 @@ export class Classroom extends DurableObject {
   }
   async issuePass() {
     const tok = rand(24);
-    this.sql.exec(`DELETE FROM sess WHERE exp<?`, now());
+    this.sql.exec(`DELETE FROM sess WHERE exp<? AND role<>'student'`, now());
     this.sql.exec(`INSERT INTO sess (tok,role,sid,exp) VALUES (?,?,?,?)`, tok, "pass", "", now() + 30 * MIN);
     return tok;
   }
@@ -527,7 +531,7 @@ export class Classroom extends DurableObject {
   }
   teacherToken() {
     const tok = rand(24);
-    this.sql.exec(`DELETE FROM sess WHERE exp<?`, now());
+    this.sql.exec(`DELETE FROM sess WHERE exp<? AND role<>'student'`, now());
     this.sql.exec(`INSERT INTO sess (tok,role,sid,exp) VALUES (?,?,?,?)`, tok, "teacher", "", now() + 12 * 60 * MIN);
     return tok;
   }
@@ -559,7 +563,8 @@ export class Classroom extends DurableObject {
     }
     this.sql.exec(`UPDATE pins SET fails=0, lock=0 WHERE sid=?`, s.id);
     const tok = rand(24);
-    this.sql.exec(`INSERT INTO sess (tok,role,sid,exp,lesson) VALUES (?,?,?,?,?)`, tok, "student", s.id, now() + 3 * 60 * MIN, l.code);
+    // 학생 로그인은 시간이 지나도 끊기지 않고, 선생님이 '수업 끝'을 누를 때까지 유지된다
+    this.sql.exec(`INSERT INTO sess (tok,role,sid,exp,lesson) VALUES (?,?,?,?,?)`, tok, "student", s.id, now() + 30 * 24 * 60 * MIN, l.code);
     return { token: tok, sid: s.id, name: s.name };
   }
   /* --- 세션 --- */
@@ -567,7 +572,8 @@ export class Classroom extends DurableObject {
     const t = bearer(req, url);
     if (!t) return null;
     const r = this.sql.exec(`SELECT * FROM sess WHERE tok=?`, t).toArray()[0];
-    if (!r || r.exp < now()) return null;
+    if (!r) return null;
+    if (r.role !== "student" && r.exp < now()) return null;
     if (r.role === "student") {
       const l = this.lesson();
       if (!l.open || l.code !== r.lesson) return null;
@@ -891,11 +897,20 @@ export class Classroom extends DurableObject {
       this.sql.exec(`DELETE FROM sess WHERE role='teacher' AND tok<>?`, me.tok);
       return J({ ok: true });
     }
-    if (key === "lesson") return J({ ...this.lesson(), connected: this.connected() });
+    if (key === "lesson") {
+      const l = this.lesson();
+      // 예전에 4시간으로 열린 수업 코드도 수업을 끝낼 때까지 쓰이도록 늘린다
+      if (l.open && l.code && (l.exp || 0) < now() + 7 * 24 * 60 * MIN) {
+        l.exp = now() + 30 * 24 * 60 * MIN;
+        this.kv("lesson", l);
+        try { await reg(this.env).extendCode(meta.id, l.code, l.exp); } catch (e) {}
+      }
+      return J({ ...l, connected: this.connected() });
+    }
     if (key === "lesson/open") {
       let l = this.lesson();
       if (!l.open) {
-        const exp = now() + 4 * 60 * MIN;
+        const exp = now() + 30 * 24 * 60 * MIN;
         const code = await reg(this.env).setCode(meta.id, exp);
         l = { open: true, code, openedAt: now(), exp };
         this.kv("lesson", l);
