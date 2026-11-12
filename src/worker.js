@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { isObj, clone, getAt, applyOps, diffState, permOfCore, PERM_TABS, NOJOB } from "./core.js";
+import { isObj, clone, getAt, applyOps, diffState, permOfCore, PERM_TABS, NOJOB, AV_PRICES, avPriceCore } from "./core.js";
 
 /* ===== 자동 체결 =====
    여러 패드가 거의 동시에 주문하면 서로의 주문을 못 보고 둘 다 대기 주문으로 남을 수 있다.
@@ -376,7 +376,7 @@ export class Registry extends DurableObject {
 }
 
 /* ===== 반 하나의 저장소 ===== */
-const LABEL = { pins: "학생 비밀번호", tx: "통장 거래", weeks: "주간 기록", laws: "우리 반의 법", market: "주식·채권", holdings: "보유 증권", trades: "체결", realized: "실현손익", treasury: "국세청 장부", donations: "기부", bank: "은행", meta: "학생 정보", students: "학생 명단", jobs: "직업", perms: "권한", settings: "설정", titles: "칭호", diliItems: "성실 항목", sheets: "실적표" };
+const LABEL = { avatars: "캐릭터", shop: "상점", pins: "학생 비밀번호", tx: "통장 거래", weeks: "주간 기록", laws: "우리 반의 법", market: "주식·채권", holdings: "보유 증권", trades: "체결", realized: "실현손익", treasury: "국세청 장부", donations: "기부", bank: "은행", meta: "학생 정보", students: "학생 명단", jobs: "직업", perms: "권한", settings: "설정", titles: "칭호", diliItems: "성실 항목", sheets: "실적표" };
 const summarize = (ops) => {
   const m = {};
   for (const o of ops) {
@@ -711,7 +711,52 @@ export class Classroom extends DurableObject {
     return true;
   }
   /* --- 학생 입력 검사 --- */
+  /* --- 캐릭터 상점: 자기 캐릭터만, 정해진 값을 자기 통장에서 내고, 가진 것만 입는다 --- */
+  checkShop(me, ops) {
+    const sid = me.sid;
+    if (!ops.some((o) => (o.path || [])[0] === "avatars")) return false;
+    for (const o of ops) {
+      const p = o.path || [];
+      if (p[0] === "avatars") {
+        if (p.length === 1 && o.op === "ensure") continue;
+        if (p[1] !== sid) return false;
+        continue;
+      }
+      if (p[0] === "tx" || p[0] === "treasury") {
+        if (p.length === 1 && o.op === "ensure") continue;
+        if (o.op !== "aput" || p.length !== 1 || !isObj(o.value)) return false;
+        continue;
+      }
+      return false;
+    }
+    const d = this.data || {};
+    const after = clone(d);
+    applyOps(after, ops);
+    const A = ((d.avatars || {})[sid]) || {};
+    const B = ((after.avatars || {})[sid]) || {};
+    const own0 = new Set(A.own || []);
+    const own1 = B.own || [];
+    if (!Array.isArray(own1) || (A.own || []).some((x) => !own1.includes(x))) return false;
+    const added = own1.filter((x) => !own0.has(x));
+    if (added.some((x) => !(x in AV_PRICES) || ((d.shop || {}).off || {})[x])) return false;
+    const cost = added.reduce((t, x) => t + avPriceCore(d, x), 0);
+    const txs = ops.filter((o) => (o.path || [])[0] === "tx" && o.op === "aput").map((o) => o.value);
+    const trs = ops.filter((o) => (o.path || [])[0] === "treasury" && o.op === "aput").map((o) => o.value);
+    const paid = txs.reduce((t, v) => t + (Number(v.amount) || 0), 0);
+    if (txs.some((v) => v.sid !== sid || v.type !== "out" || !String(v.memo || "").startsWith("상점"))) return false;
+    if (trs.some((v) => v.kind !== "in" || !String(v.label || "").startsWith("상점"))) return false;
+    if (paid !== cost || trs.reduce((t, v) => t + (Number(v.amount) || 0), 0) !== cost) return false;
+    if (cost > 0 && balOf(d, sid) < cost) return false;
+    if (B.g && B.g !== "b" && B.g !== "g") return false;
+    const ownAll = new Set(own1);
+    for (const id of Object.values(B.wear || {})) {
+      if (!(id in AV_PRICES)) return false;
+      if (!ownAll.has(id) && avPriceCore(after, id) !== 0) return false;
+    }
+    return true;
+  }
   checkStudent(me, ops) {
+    if (this.checkShop(me, ops)) return null;
     if (this.checkTrade(me, ops)) return null;
     const d = this.data || {};
     const sid = me.sid;

@@ -166,4 +166,11 @@ function permOfCore(data, jobId, tab) {
   return d;
 }
 
-export { isObj, clone, diffState, getAt, applyOp, applyOps, permOfCore, PERM_TABS, NOJOB };
+/* ===== 캐릭터 상점 기본 가격 (화면의 상품 목록과 같아야 함) ===== */
+const AV_PRICES = {"face_b0":0,"face_g0":0,"face_b1":0,"face_g1":0,"face_b2":0,"face_g2":0,"face_b3":0,"face_g3":0,"face_b4":0,"face_g4":0,"face_b5":0,"face_g5":0,"face_b6":0,"face_g6":0,"face_b7":0,"face_g7":0,"hair_b0":0,"hair_b1":80,"hair_b2":80,"hair_b3":80,"hair_b4":80,"hair_b5":80,"hair_b6":80,"hair_g0":0,"hair_g1":80,"hair_g2":80,"hair_g3":80,"hair_g4":80,"hair_g5":80,"hair_g6":80,"out_b_blazer":300,"out_b_vest":250,"out_b_hoodie":350,"out_b_wizard":600,"out_b_labcoat":300,"out_b_soccer":280,"out_b_explorer":400,"out_b_winter":350,"out_b_pumpkin":450,"out_b_angel":700,"out_g_blazer":300,"out_g_sweater":250,"out_g_bluedress":450,"out_g_pinkdress":450,"out_g_yellowdress":450,"out_g_wizard":600,"out_g_labcoat":300,"out_g_maid":400,"out_g_winter":350,"out_g_pumpkin":450,"out_g_angel":700,"shoe_sneaker_b":100,"shoe_boots_b":150,"shoe_sneaker2":100,"shoe_fur_b":160,"shoe_maryjane":120,"shoe_boots_g":150,"shoe_sneaker_g":100,"shoe_fur_g":160,"hat_cap":120,"hat_beanie":120,"hat_beret_b":150,"hat_aviator":200,"hat_wizard":250,"hat_crown":500,"acc_headphones":220,"acc_glasses":100,"acc_goggles":150,"acc_beltbag":150,"back_backpack":200,"hat_catears_b":150,"back_angelwings":500,"back_batwings":450,"hand_wand":300,"hand_sword":350,"hand_shield":300,"hat_redbow":100,"hat_bluebow":100,"hat_tiara":450,"hat_flowercrown":200,"hat_beret_g":150,"hat_sunhat":180,"hat_strawhat":160,"hat_catears_g":150,"hat_bunnyears":150,"hat_halo":400,"acc_necklace":250,"hand_bag":220,"hand_book":150,"hand_potion":250,"hand_lantern":200,"hand_bouquet":180,"pet_bunny":400,"pet_bear":400,"pet_cat":400,"fx_sparkle":200,"fx_stars":200,"fx_water":500,"fx_fire":500,"fx_magic":500};
+const avPriceCore = (data, id) => {
+  const p = (((data && data.shop) || {}).price || {})[id];
+  return p != null && p !== "" && !isNaN(Number(p)) ? Math.max(0, Math.round(Number(p))) : AV_PRICES[id] || 0;
+};
+
+export { isObj, clone, diffState, getAt, applyOp, applyOps, permOfCore, PERM_TABS, NOJOB, AV_PRICES, avPriceCore };
