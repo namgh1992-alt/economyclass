@@ -167,7 +167,7 @@ function permOfCore(data, jobId, tab) {
 }
 
 /* ===== 캐릭터 상점 기본 가격 (화면의 상품 목록과 같아야 함) ===== */
-const AV_PRICES = {"set01":800,"set02":1000,"set03":700,"set04":600,"set05":900,"set06":500,"set07":500,"set08":800,"set09":800,"set10":700,"set11":900,"set12":1000,"set13":1000,"set14":1000,"set15":900,"set16":600,"set17":600,"set18":600,"set19":700,"set20":1000};
+const AV_PRICES = {"set01":800,"set02":1000,"set03":700,"set04":600,"set05":900,"set06":500,"set07":500,"set08":800,"set09":800,"set10":700,"set11":900,"set12":1000,"set13":1000,"set14":1000,"set15":900,"set16":600,"set17":600,"set18":600,"set19":700,"set20":1000,"set21":700,"set22":600,"set23":700,"set24":900,"set25":900,"set26":1000,"set27":1000,"set28":1000,"set29":900,"set30":900,"set31":1000,"set32":1000,"set33":900,"set34":800,"set35":600,"set36":700,"set37":700,"set38":600,"set39":800,"set40":700,"set41":800,"set42":600,"set43":1000,"set44":800,"set45":900,"set46":800,"set47":1000,"set48":800,"set49":800,"set50":1000,"set51":800,"set52":800,"set53":600,"set54":900,"set55":900,"set56":700,"set57":800};
 const avPriceCore = (data, id) => {
   const p = (((data && data.shop) || {}).price || {})[id];
   return p != null && p !== "" && !isNaN(Number(p)) ? Math.max(0, Math.round(Number(p))) : AV_PRICES[id] || 0;
